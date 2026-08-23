@@ -43,13 +43,6 @@ const BACKDROP_STYLE = {
   fillOpacity: 0.55,
 };
 
-const ROUTE_STYLE = {
-  color: COLOR_BASE,
-  weight: 2,
-  fillColor: COLOR_ACCENT,
-  fillOpacity: 0.95,
-};
-
 const USER_STYLE = {
   color: COLOR_ACCENT,
   weight: 3,
