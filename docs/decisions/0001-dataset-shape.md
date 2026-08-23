@@ -43,7 +43,31 @@ marker queries.
 
 Field mapping notes:
 - `actor_1`, `actor_2`, `actor_3` are normalized into a single `actors` list.
-- Rows are grouped into `Film` + `FilmLocation`: 350 films, 2,214 locations.
+- Rows are grouped into `Film` + `FilmLocation`.
+
+### Source rows vs stored rows
+
+The two counts differ, and both are correct:
+
+| | Source | Stored |
+|---|---|---|
+| Rows / locations | 2,214 | **2,207** |
+| With coordinates | 2,128 | **2,120** |
+| Without coordinates | 86 | **87** |
+| Films | 350 distinct titles | **352** |
+
+- **2,214 → 2,207.** Seven source rows collapse onto an identity already seen —
+  same title, year, and location, differing only in `fun_facts`. They are counted
+  and reported by the sync, not silently dropped.
+- **350 → 352.** Slugs incorporate the release year, so two title-and-year
+  collisions between genuinely different productions resolve into separate films.
+- **86 → 87 unmappable.** Eighty-six rows publish no coordinates at all. One more
+  publishes coordinates that fall outside San Francisco (latitude 36.85, roughly
+  Monterey), which the mapper's bounding-box check rejects rather than plotting a
+  marker in the wrong place. See `SF_LAT_RANGE` in `films/services/mapper.py`.
+
+The source figures are what the dataset publishes; the stored figures are what the
+API serves. Documentation quoting either should say which it means.
 
 ## Alternatives considered
 

@@ -4,7 +4,10 @@ One Vercel project serves both the API and the SPA. **Free, and no payment card.
 See [ADR-0007](decisions/0007-single-vercel-deployment.md) for why this replaced the
 original two-platform setup.
 
-About 10 minutes.
+About 10 minutes. This is the path the live deployment actually took, including
+the failures worth knowing about — see Troubleshooting.
+
+**Currently deployed:** https://sf-on-film-15fbku0f3-harshit2123s-projects.vercel.app
 
 ---
 
@@ -144,9 +147,27 @@ repository root.
 **500 on every API route**
 Usually a missing `DJANGO_SECRET_KEY`. Check with `vercel env ls`, then redeploy.
 
-**"attempt to write a readonly database"**
-Something is writing at runtime. The API is read-only by design; check `vercel logs`
-for the failing view.
+**`unable to open database file`, with the file present**
+SQLite creates a journal beside the database even to read it, which a read-only
+filesystem refuses. Settings open it as `file:...?mode=ro&immutable=1` under the
+serverless runtime for exactly this reason — if this reappears, check that
+`IS_SERVERLESS` is being detected (it keys off `VERCEL`).
+
+**Every route redirects to a Vercel login page**
+Deployment Protection is on, which is the default for new projects. It gates the
+API too, so the SPA reports the backend as unreachable. Turn it off under
+Settings → Deployment Protection → Vercel Authentication.
+
+**`ENOENT` during upload, naming a file that exists**
+A `.vercelignore` entry is excluding a path the function bundle still references.
+The uploader honours the ignore file; the bundle does not. Remove the entry rather
+than adding the file.
+
+**"Project framework is set to services"**
+The CLI infers a multi-service repo from sibling `frontend/` and `backend/`
+directories and locks the project's Framework Preset to Services. Change it to
+Vite under Settings → Build and Deployment, then `vercel pull` to refresh the
+local cache before rebuilding.
 
 **Frontend loads, API calls 404**
 `vercel.json` is not at the repository root, or the project's Root Directory was set
