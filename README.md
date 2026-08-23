@@ -4,7 +4,7 @@ A map of where films were shot in San Francisco, built from the City's public
 permit records. Search by title, director, or actor; filter by decade or
 neighborhood; select a film to see its shooting locations drawn as a route.
 
-**▶ Live: https://sf-on-film-15fbku0f3-harshit2123s-projects.vercel.app**
+**▶ Live: https://sf-on-film.vercel.app**
 
 Try `bullitt`, `vertigo`, or `eastwood`. Zoom past street level to see film names
 on the map.

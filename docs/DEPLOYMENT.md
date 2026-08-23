@@ -7,7 +7,12 @@ original two-platform setup.
 About 10 minutes. This is the path the live deployment actually took, including
 the failures worth knowing about — see Troubleshooting.
 
-**Currently deployed:** https://sf-on-film-15fbku0f3-harshit2123s-projects.vercel.app
+**Live:** https://sf-on-film.vercel.app
+
+Vercel mints a new URL for every deployment
+(`sf-on-film-<hash>-…vercel.app`), but the project alias above always points at
+the current production build. Share the alias; the per-deployment URLs are only
+useful for inspecting a specific build.
 
 ---
 
@@ -172,6 +177,12 @@ local cache before rebuilding.
 **Frontend loads, API calls 404**
 `vercel.json` is not at the repository root, or the project's Root Directory was set
 to `frontend`. It must be `./`.
+
+**A change is in the code but not on the site**
+The deployment serves the bundle built at deploy time, not the working tree. A
+source edit does nothing until `vercel --prod` runs again — and if you are looking
+at a per-deployment URL rather than the alias, you may be viewing an older build
+entirely.
 
 **Build succeeds but the map is empty**
 Open `/api/locations/` directly. If it returns `[]`, the sync ran against an empty

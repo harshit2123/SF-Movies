@@ -2,7 +2,7 @@
 
 Read-only JSON API over the DataSF Film Locations dataset.
 
-**Live:** `https://sf-on-film-15fbku0f3-harshit2123s-projects.vercel.app/api`
+**Live:** `https://sf-on-film.vercel.app/api`
 **Local:** `http://localhost:8000/api`
 
 All responses are `application/json`. All endpoints are `GET` and unauthenticated
