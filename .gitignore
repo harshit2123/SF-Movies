@@ -29,3 +29,6 @@ dist/
 .DS_Store
 .vscode/
 .idea/
+
+# Frontend build output
+frontend/dist/

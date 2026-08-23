@@ -1,0 +1,131 @@
+/*
+ * Design tokens — 35mm film archive.
+ *
+ * The subject is a century of film permits (1915–2025), so the interface borrows
+ * the darkroom rather than defaulting to a generic dark theme: a deep charcoal
+ * ground, bone-white type, and a single safelight orange reserved for the
+ * currently selected film. Restraint is the point — one accent, used sparingly,
+ * is what makes the selected route read instantly against 2,120 markers.
+ */
+
+:root {
+  /* --- Ground and surfaces -------------------------------------------- */
+  --color-base: #0e0e10; /* darkroom black */
+  --color-surface: #16161a; /* panels */
+  --color-surface-raised: #1e1e24; /* cards, inputs */
+  --color-surface-hover: #26262e;
+  --color-border: #2a2a32;
+  --color-border-strong: #3a3a45;
+
+  /* --- Type ------------------------------------------------------------ */
+  --color-text: #e8e4dc; /* bone */
+  --color-text-muted: #9a968e;
+  --color-text-dim: #6a6862;
+
+  /* --- Accents ---------------------------------------------------------
+   * Safelight orange marks the active film and nothing else. Archival green
+   * carries neighborhood/metadata. A third hue would dilute both.
+   */
+  --color-accent: #d94f2a;
+  --color-accent-soft: rgba(217, 79, 42, 0.16);
+  --color-accent-glow: rgba(217, 79, 42, 0.4);
+  --color-meta: #6b8f71;
+
+  /* --- Typography ------------------------------------------------------
+   * Display: condensed grotesque, tight tracking — title-card feel.
+   * Body: neutral sans.
+   * Mono: years, coordinates, distances. The data is archival metadata and
+   * is set as such.
+   */
+  --font-display: "Oswald", "Haettenschweiler", "Arial Narrow", sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+
+  --tracking-tight: -0.02em;
+  --tracking-wide: 0.08em;
+  --tracking-wider: 0.16em;
+
+  /* --- Space ----------------------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+
+  --radius-sm: 2px;
+  --radius: 4px;
+  --radius-lg: 8px;
+
+  /* --- Motion ----------------------------------------------------------
+   * Fast and mechanical, like a shutter. Nothing bounces.
+   */
+  --duration-fast: 120ms;
+  --duration-normal: 220ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-raised: 0 2px 8px rgba(0, 0, 0, 0.4);
+
+  /* --- Layout ---------------------------------------------------------- */
+  --sidebar-width: 340px;
+  --header-height: 56px;
+  --z-panel: 500;
+  --z-header: 1000;
+  --z-overlay: 1200;
+}
+
+/*
+ * The design commits to a single dark look, so there is no light-theme block.
+ * Colors are defined once and painted explicitly rather than inherited.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--color-base);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible keyboard focus everywhere, never removed without replacement. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

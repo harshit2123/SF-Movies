@@ -1,0 +1,158 @@
+/* Map layer styling. Leaflet's defaults are overridden to match the archive palette. */
+
+.map {
+  position: absolute;
+  inset: 0;
+  background: var(--color-base);
+}
+
+/* Leaflet paints its own light background behind tiles. */
+.leaflet-container {
+  background: var(--color-base);
+  font-family: var(--font-body);
+}
+
+/* --- Markers -------------------------------------------------------------
+ * The backdrop is deliberately quiet: 2,120 muted dots that read as texture
+ * until one film is selected.
+ */
+
+.marker {
+  fill: var(--color-meta);
+  fill-opacity: 0.55;
+  stroke: var(--color-base);
+  stroke-width: 1;
+  cursor: pointer;
+  transition:
+    fill-opacity var(--duration-fast) var(--ease-out),
+    stroke-width var(--duration-fast) var(--ease-out);
+}
+
+.marker:hover {
+  fill-opacity: 1;
+  stroke-width: 2;
+}
+
+/* The selected film's own markers carry the single accent. */
+.marker--route {
+  fill: var(--color-accent);
+  fill-opacity: 0.9;
+  stroke: var(--color-base);
+  stroke-width: 2;
+}
+
+.marker--user {
+  fill: var(--color-text);
+  fill-opacity: 0.9;
+  stroke: var(--color-accent);
+  stroke-width: 3;
+}
+
+.route-line {
+  stroke: var(--color-accent);
+  stroke-opacity: 0.75;
+}
+
+/* --- Clusters ------------------------------------------------------------
+ * Sized by density so the eye reads volume before reading numbers.
+ */
+
+.cluster {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  box-shadow: var(--shadow-raised);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.cluster:hover {
+  transform: scale(1.08);
+}
+
+.cluster--sm {
+  width: 30px;
+  height: 30px;
+}
+.cluster--md {
+  width: 38px;
+  height: 38px;
+  border-color: var(--color-meta);
+}
+.cluster--lg {
+  width: 46px;
+  height: 46px;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* --- Popups -------------------------------------------------------------- */
+
+.leaflet-popup-content-wrapper {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-panel);
+}
+
+.leaflet-popup-tip {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-strong);
+}
+
+.leaflet-popup-content {
+  margin: var(--space-3) var(--space-4);
+  display: grid;
+  gap: 2px;
+}
+
+.leaflet-popup-close-button {
+  color: var(--color-text-muted) !important;
+}
+
+.popup__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+}
+
+.popup__index {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.popup__year {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.popup__place {
+  color: var(--color-text);
+}
+
+.popup__meta {
+  font-size: var(--text-xs);
+  color: var(--color-meta);
+}
+
+/* --- Attribution and controls -------------------------------------------- */
+
+.leaflet-control-attribution {
+  background: rgba(14, 14, 16, 0.85) !important;
+  color: var(--color-text-dim) !important;
+  font-size: 10px !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--color-text-muted) !important;
+}

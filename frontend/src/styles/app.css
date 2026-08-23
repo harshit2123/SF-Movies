@@ -1,0 +1,327 @@
+/*
+ * Application layout.
+ *
+ * A three-region grid: header across the top, controls at left, map filling the
+ * rest, with the detail panel overlaying from the right when a film is selected.
+ * The map is the largest surface because the map is the product.
+ */
+
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "header header"
+    "sidebar map";
+  height: 100%;
+}
+
+/* --- Header ---------------------------------------------------------------
+ * Deliberately asymmetric: the wordmark sits left, the stats sit hard right,
+ * and the tagline runs between them rather than centering under the title.
+ */
+
+.app__header {
+  grid-area: header;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3) var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* The mark: a single film perforation. */
+.app__mark {
+  width: 14px;
+  height: 18px;
+  border: 2px solid var(--color-accent);
+  border-radius: 2px;
+  background:
+    linear-gradient(
+      to bottom,
+      var(--color-accent) 0 3px,
+      transparent 3px calc(100% - 3px),
+      var(--color-accent) calc(100% - 3px) 100%
+    );
+}
+
+.app__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.app__tagline {
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.app__stats {
+  display: flex;
+  gap: var(--space-4);
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-dim);
+}
+
+/* --- Sidebar -------------------------------------------------------------- */
+
+.app__sidebar {
+  grid-area: sidebar;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  overflow-y: auto;
+}
+
+.app__notice {
+  margin: 0;
+  padding: var(--space-3);
+  background: var(--color-surface-raised);
+  border-left: 2px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.app__result-count {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-dim);
+}
+
+.app__clear {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-accent);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.app__clear:hover {
+  color: var(--color-text);
+}
+
+/* --- Map ------------------------------------------------------------------ */
+
+.app__map {
+  grid-area: map;
+  position: relative;
+}
+
+.app__offline {
+  display: grid;
+  place-content: center;
+  gap: var(--space-2);
+  height: 100%;
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.app__offline-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-tight);
+}
+
+.app__offline-detail {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.app__offline code {
+  padding: 2px 6px;
+  background: var(--color-surface-raised);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-accent);
+}
+
+/* --- Detail panel ---------------------------------------------------------
+ * Overlays the map's right edge rather than displacing it, so the route stays
+ * where the eye left it.
+ */
+
+.app__panel {
+  position: fixed;
+  top: var(--header-height);
+  right: 0;
+  bottom: 0;
+  width: min(400px, 100vw);
+  /* Above Leaflet's own controls and attribution, which would otherwise draw
+     on top of the panel's content. */
+  z-index: var(--z-overlay);
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-panel);
+  animation: panel-in var(--duration-normal) var(--ease-out);
+}
+
+@keyframes panel-in {
+  from {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+}
+
+/* --- Error boundary ------------------------------------------------------- */
+
+.boundary {
+  display: grid;
+  place-content: center;
+  gap: var(--space-3);
+  height: 100%;
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.boundary__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  text-transform: uppercase;
+}
+
+.boundary__detail {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.boundary__action {
+  justify-self: center;
+  padding: var(--space-2) var(--space-5);
+  background: transparent;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  cursor: pointer;
+}
+
+.boundary__action:hover {
+  background: var(--color-accent-soft);
+}
+
+/* --- Responsive -----------------------------------------------------------
+ * Below 900px the sidebar becomes a horizontal strip above the map, and the
+ * detail panel takes the full width.
+ */
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "header"
+      "sidebar"
+      "map";
+  }
+
+  .app {
+    /* The sidebar sizes to its content; the map takes everything left over. */
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  .app__sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    /* Controls are capped and scroll internally, so the map is never squeezed
+       off-screen by a long neighborhood list or a tall row of decade chips. */
+    max-height: 34vh;
+    padding: var(--space-4);
+    gap: var(--space-4);
+  }
+
+  .app__map {
+    /* Guarantees the map a share of the viewport once the panel is open. */
+    min-height: 40vh;
+  }
+
+  /* With the sheet open, the map keeps the half of the screen above it. */
+  .app:has(.app__panel) .app__map {
+    height: 50vh;
+    min-height: 0;
+  }
+
+  /*
+   * A bottom sheet rather than a full overlay: the map must stay visible while
+   * reading the filmstrip, otherwise selecting a film hides the thing it selects.
+   */
+  .app__panel {
+    /* Anchored to the bottom edge, not offset from a header whose height varies
+       with wrapping — that left the sheet covering the map entirely. */
+    top: auto;
+    bottom: 0;
+    width: 100vw;
+    height: 50vh;
+    border-left: none;
+    border-top: 1px solid var(--color-border-strong);
+    animation: sheet-in var(--duration-normal) var(--ease-out);
+  }
+
+  @keyframes sheet-in {
+    from {
+      transform: translateY(16px);
+      opacity: 0;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .app__header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .app__tagline {
+    display: none;
+  }
+
+  /* On a phone the controls collapse to search plus the nearby button; the
+     decade chips and neighborhood select scroll within the strip. */
+  .app__sidebar {
+    max-height: 24vh;
+  }
+
+  .app:has(.app__panel) .app__sidebar {
+    /* With the sheet open, controls yield further so the map stays readable. */
+    max-height: 18vh;
+  }
+}
