@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Django
+*.sqlite3
+*.sqlite3-journal
+staticfiles/
+
+# Env — .env.example IS committed, .env is not
+.env
+.env.local
+.env.*.local
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Editors / OS
+.DS_Store
+.vscode/
+.idea/

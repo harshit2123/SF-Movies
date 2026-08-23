@@ -1,0 +1,220 @@
+[
+  {
+    "title": "Milk",
+    "release_year": "2008",
+    "locations": "El Camino Del Mar",
+    "production_company": "Focus Features",
+    "distributor": "Focus Features",
+    "director": "Gus Van Sant",
+    "writer": "Dustin Lance Black",
+    "actor_1": "Sean Penn",
+    "actor_2": "Emile Hirsch",
+    "point": {
+      "type": "Point",
+      "coordinates": [
+        -122.4962354,
+        37.7857806
+      ]
+    },
+    "longitude": "-122.4962354",
+    "latitude": "37.7857806",
+    "analysis_neighborhood": "Lincoln Park",
+    "supervisor_district": "1",
+    "data_as_of": "2026-02-20T16:37:46.000",
+    "data_loaded_at": "2026-02-20T16:44:43.000",
+    ":@computed_region_6qbp_sg9q": "7",
+    ":@computed_region_ajp5_b2md": "17",
+    ":@computed_region_26cr_cadq": "4"
+  },
+  {
+    "title": "Milk",
+    "release_year": "2008",
+    "locations": "29th and Dolores Street",
+    "production_company": "Focus Features",
+    "distributor": "Focus Features",
+    "director": "Gus Van Sant",
+    "writer": "Dustin Lance Black",
+    "actor_1": "Sean Penn",
+    "actor_2": "Emile Hirsch",
+    "point": {
+      "type": "Point",
+      "coordinates": [
+        -122.4246468,
+        37.7437303
+      ]
+    },
+    "longitude": "-122.4246468",
+    "latitude": "37.7437303",
+    "analysis_neighborhood": "Noe Valley",
+    "supervisor_district": "8",
+    "data_as_of": "2026-02-20T16:37:46.000",
+    "data_loaded_at": "2026-02-20T16:44:43.000",
+    ":@computed_region_6qbp_sg9q": "84",
+    ":@computed_region_ajp5_b2md": "22",
+    ":@computed_region_26cr_cadq": "5"
+  },
+  {
+    "title": "Milk",
+    "release_year": "2008",
+    "locations": "Treasure Island",
+    "fun_facts": "An artificial island, Treasure Island was created for the 1939 Golden Gate International Exposition, and is named after the novel by Robert Louis Stevenson, a one-time San Francisco resident.",
+    "production_company": "Focus Features",
+    "distributor": "Focus Features",
+    "director": "Gus Van Sant",
+    "writer": "Dustin Lance Black",
+    "actor_1": "Sean Penn",
+    "actor_2": "Emile Hirsch",
+    "point": {
+      "type": "Point",
+      "coordinates": [
+        -122.3699786,
+        37.825284
+      ]
+    },
+    "longitude": "-122.3699786",
+    "latitude": "37.825284",
+    "analysis_neighborhood": "Treasure Island",
+    "supervisor_district": "6",
+    "data_as_of": "2026-02-20T16:37:46.000",
+    "data_loaded_at": "2026-02-20T16:44:43.000",
+    ":@computed_region_6qbp_sg9q": "36",
+    ":@computed_region_ajp5_b2md": "37",
+    ":@computed_region_26cr_cadq": "10"
+  },
+  {
+    "title": "Milk",
+    "release_year": "2008",
+    "locations": "Market & Castro Street",
+    "fun_facts": "From 1910-1920 the Castro was called \"Little Scandinavia\" because of its high concentration of residents of Scandinavian ancestry.",
+    "production_company": "Focus Features",
+    "distributor": "Focus Features",
+    "director": "Gus Van Sant",
+    "writer": "Dustin Lance Black",
+    "actor_1": "Sean Penn",
+    "actor_2": "Emile Hirsch",
+    "point": {
+      "type": "Point",
+      "coordinates": [
+        -122.435218,
+        37.7627161
+      ]
+    },
+    "longitude": "-122.435218",
+    "latitude": "37.7627161",
+    "analysis_neighborhood": "Castro/Upper Market",
+    "supervisor_district": "8",
+    "data_as_of": "2026-02-20T16:37:46.000",
+    "data_loaded_at": "2026-02-20T16:44:43.000",
+    ":@computed_region_6qbp_sg9q": "113",
+    ":@computed_region_ajp5_b2md": "5",
+    ":@computed_region_26cr_cadq": "5"
+  },
+  {
+    "title": "Sense8",
+    "release_year": "2015",
+    "locations": "Van Ness and 12th St.",
+    "fun_facts": "A couple reminisces on the moment they first fell in love",
+    "production_company": "Unpronounceable Productions, LLC",
+    "distributor": "Netflix",
+    "director": "The Wachowskis",
+    "writer": "The Wachowskis",
+    "actor_1": "Jamie Clayton",
+    "point": {
+      "type": "Point",
+      "coordinates": [
+        -122.4188895,
+        37.7735588
+      ]
+    },
+    "longitude": "-122.4188895",
+    "latitude": "37.7735588",
+    "analysis_neighborhood": "Mission",
+    "supervisor_district": "6",
+    "data_as_of": "2026-02-20T16:37:46.000",
+    "data_loaded_at": "2026-02-20T16:44:43.000",
+    ":@computed_region_6qbp_sg9q": "32",
+    ":@computed_region_ajp5_b2md": "20",
+    ":@computed_region_26cr_cadq": "10"
+  },
+  {
+    "title": "Quitters",
+    "release_year": "2015",
+    "locations": "Geary from 22nd Ave to Arguello",
+    "production_company": "Frederick & Ashbury, LLC.",
+    "director": "Noah Pritzker",
+    "writer": "Noah Pritzker",
+    "actor_1": "Kara Hayward",
+    "actor_2": "Mira Sorvino",
+    "actor_3": "Saffron Burrows",
+    "data_as_of": "2026-02-20T16:37:46.000",
+    "data_loaded_at": "2026-02-20T16:44:43.000"
+  },
+  {
+    "title": "Desperate Measures",
+    "release_year": "1998",
+    "production_company": "Mandalay Entertainment",
+    "distributor": "TriStar Pictures",
+    "director": "Barbet Schroeder",
+    "writer": "David Klass",
+    "actor_1": "Michael Keaton",
+    "actor_2": "Andy Garcia",
+    "actor_3": "Raven-Symone",
+    "data_as_of": "2026-02-20T16:37:46.000",
+    "data_loaded_at": "2026-02-20T16:44:43.000"
+  },
+  {
+    "title": "Chance Season 2",
+    "release_year": "2017",
+    "locations": "Coit Tower",
+    "production_company": "TVM Productions Inc.",
+    "distributor": "Hulu",
+    "director": "Rozann Dawson",
+    "writer": "Alexandra Cunningham",
+    "actor_1": "Hugh Laurie",
+    "actor_2": "Greta Lee",
+    "actor_3": "Ethan Suplee",
+    "point": {
+      "type": "Point",
+      "coordinates": [
+        -122.4058222,
+        37.8023949
+      ]
+    },
+    "longitude": "-122.4058222",
+    "latitude": "37.8023949",
+    "analysis_neighborhood": "North Beach",
+    "supervisor_district": "3",
+    "data_as_of": "2026-02-20T16:37:46.000",
+    "data_loaded_at": "2026-02-20T16:44:43.000",
+    ":@computed_region_6qbp_sg9q": "18",
+    ":@computed_region_ajp5_b2md": "23",
+    ":@computed_region_26cr_cadq": "3"
+  },
+  {
+    "title": "A Jitney Elopement",
+    "release_year": "1915",
+    "locations": "20th and Folsom Streets",
+    "production_company": "The Essanay Film Manufacturing Company",
+    "distributor": "General Film Company",
+    "director": "Charles Chaplin",
+    "writer": "Charles Chaplin",
+    "actor_1": "Charles Chaplin",
+    "actor_2": "Edna Purviance",
+    "point": {
+      "type": "Point",
+      "coordinates": [
+        -122.42792,
+        37.75826
+      ]
+    },
+    "longitude": "-122.42792",
+    "latitude": "37.75826",
+    "analysis_neighborhood": "Castro/Upper Market",
+    "supervisor_district": "8",
+    "data_as_of": "2026-02-20T16:37:46.000",
+    "data_loaded_at": "2026-02-20T16:44:43.000",
+    ":@computed_region_6qbp_sg9q": "37",
+    ":@computed_region_ajp5_b2md": "5",
+    ":@computed_region_26cr_cadq": "5"
+  }
+]
