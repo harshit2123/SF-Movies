@@ -142,6 +142,9 @@ export default function App() {
               selectedFilm={selectedFilm.data ?? null}
               userPosition={state.nearby ? geo.position : null}
               focusedPoint={focusedPoint}
+              isFiltered={Boolean(
+                state.neighborhood || state.decade || state.search,
+              )}
               onSelectFilm={(film) => update({ film })}
             />
           </ErrorBoundary>

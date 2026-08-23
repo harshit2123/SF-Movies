@@ -7,7 +7,7 @@
  * everything else recedes.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CircleMarker,
   MapContainer,
@@ -52,12 +52,17 @@ const USER_STYLE = {
 
 const ROUTE_LINE_STYLE = { color: COLOR_ACCENT, opacity: 0.75 };
 
+/** Opening view, and the view returned to when nearby mode is switched off. */
+const DEFAULT_ZOOM = 13;
+
 interface MapViewProps {
   markers: MapMarker[];
   selectedFilm: FilmDetail | null;
   userPosition: { lat: number; lng: number } | null;
   /** Set when a filmstrip frame is clicked, so the map pans to that location. */
   focusedPoint: { lat: number; lng: number } | null;
+  /** True while a filter narrows the map, so the view refits to the results. */
+  isFiltered: boolean;
   onSelectFilm: (slug: string) => void;
 }
 
@@ -102,13 +107,66 @@ function RouteFocus({ film }: { film: FilmDetail | null }) {
   return null;
 }
 
-/** Centers on the user once, when their position first arrives. */
+/**
+ * Centers on the user when their position arrives, and returns to the city when
+ * they leave nearby mode.
+ *
+ * The return leg matters: without it, turning nearby off left the map wherever
+ * the user happened to be — often nowhere near San Francisco — showing an empty
+ * view of the correct data.
+ */
 function UserFocus({ position }: { position: { lat: number; lng: number } | null }) {
+  const map = useMap();
+  const wasLocated = useRef(false);
+
+  useEffect(() => {
+    if (position) {
+      wasLocated.current = true;
+      map.flyTo([position.lat, position.lng], 15, { duration: 0.6 });
+      return;
+    }
+    // Only fly back if we had actually moved away, so this does not fight the
+    // initial view or a film route on first load.
+    if (wasLocated.current) {
+      wasLocated.current = false;
+      map.flyTo([SF_CENTER.lat, SF_CENTER.lng], DEFAULT_ZOOM, { duration: 0.6 });
+    }
+  }, [position, map]);
+
+  return null;
+}
+
+/**
+ * Frames the visible markers when a filter changes.
+ *
+ * Selecting a neighborhood previously filtered the data without moving the map,
+ * so choosing somewhere off-screen looked like it had done nothing. This fits the
+ * view to whatever the current filters actually matched.
+ */
+function FilterFocus({
+  markers,
+  enabled,
+}: {
+  markers: MapMarker[];
+  enabled: boolean;
+}) {
   const map = useMap();
 
   useEffect(() => {
-    if (position) map.flyTo([position.lat, position.lng], 15, { duration: 0.6 });
-  }, [position, map]);
+    if (!enabled || markers.length === 0) return;
+
+    const bounds = L.latLngBounds(
+      markers.map((m) => [m.latitude, m.longitude] as [number, number]),
+    );
+    map.flyToBounds(bounds, {
+      paddingTopLeft: [40, 40],
+      paddingBottomRight: [40, 40],
+      maxZoom: 15,
+      duration: 0.6,
+    });
+    // Keyed on the marker set, so it refits whenever the filters change what
+    // is shown — but not on every render.
+  }, [markers, enabled, map]);
 
   return null;
 }
@@ -235,6 +293,7 @@ export function MapView({
   selectedFilm,
   userPosition,
   focusedPoint,
+  isFiltered,
   onSelectFilm,
 }: MapViewProps) {
   // The route connects a film's locations in the order the source lists them.
@@ -258,7 +317,7 @@ export function MapView({
   return (
     <MapContainer
       center={[SF_CENTER.lat, SF_CENTER.lng]}
-      zoom={13}
+      zoom={DEFAULT_ZOOM}
       className="map"
       zoomControl={false}
       preferCanvas
@@ -271,6 +330,10 @@ export function MapView({
 
       <RouteFocus film={selectedFilm} />
       <UserFocus position={userPosition} />
+      <FilterFocus
+        markers={markers}
+        enabled={isFiltered && !selectedFilm && !userPosition}
+      />
       <PointFocus point={focusedPoint} />
 
       {/* Clustering is essential, not decorative: downtown holds hundreds of
