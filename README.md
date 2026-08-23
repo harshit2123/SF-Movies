@@ -16,6 +16,21 @@ on the map.
 
 ---
 
+## Developer
+
+**Harshit Kumar Yadav**
+
+[harshitkmryadav@gmail.com](mailto:harshitkmryadav@gmail.com) ·
+[github.com/harshit2123](https://github.com/harshit2123) ·
+[linkedin.com/in/harshit2123](https://www.linkedin.com/in/harshit2123/)
+
+Built as a take-home for KJBN Labs. Full-stack track: Django + DRF behind a
+React and TypeScript single-page app. Every architectural decision is recorded
+in [docs/decisions/](docs/decisions/) with its alternatives and tradeoffs, and a
+plain statement of my experience with each technology is [further down](#experience-with-this-stack).
+
+---
+
 ## Architecture
 
 ```
