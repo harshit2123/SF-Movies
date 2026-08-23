@@ -12,4 +12,4 @@ justifies, in the format **Context → Decision → Alternatives considered → 
 | [0005](0005-hosting.md) | Fly.io for the API, Vercel for the SPA — *superseded by 0007* |
 | [0006](0006-scope-cuts.md) | Deliberate scope cuts, each with its trigger to revisit |
 | [0007](0007-single-vercel-deployment.md) | **One Vercel project**, database baked in at build time |
-| [0008](0008-no-geolocation.md) | **No geolocation** — removed after building it |
+| [0008](0008-no-geolocation.md) | **No geolocation in the UI** — the endpoint stays |

@@ -160,6 +160,43 @@ clustering.
 
 ---
 
+## `GET /api/locations/nearby/`
+
+Locations within a radius of a point, nearest first.
+
+The bundled SPA does not call this — a "filmed near me" control was removed from the
+interface because most visitors to a San Francisco map are not in San Francisco
+([ADR-0008](decisions/0008-no-geolocation.md)). The endpoint remains for consumers
+that do know their user's position.
+
+| Query param | Type | Required | Description |
+|---|---|---|---|
+| `lat` | float | yes | −90 to 90 |
+| `lng` | float | yes | −180 to 180 |
+| `radius_km` | float | no | Default 1.0, max 20.0 |
+| `limit` | int | no | Default 50, max 200 |
+
+Distance uses the Haversine formula with a bounding-box prefilter (ADR-0006). Returns
+`400` when `lat`/`lng` are missing or out of range.
+
+```json
+[
+  {
+    "id": 135,
+    "film_slug": "after-the-thin-man-1936",
+    "film_title": "After the Thin Man",
+    "release_year": 1936,
+    "location_text": "Coit Tower",
+    "latitude": 37.8023949,
+    "longitude": -122.4058222,
+    "neighborhood": "North Beach",
+    "distance_km": 0.0
+  }
+]
+```
+
+---
+
 ## `GET /api/health/`
 
 Liveness and data-freshness check.

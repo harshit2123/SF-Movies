@@ -93,16 +93,6 @@
   overflow-y: auto;
 }
 
-.app__notice {
-  margin: 0;
-  padding: var(--space-3);
-  background: var(--color-surface-raised);
-  border-left: 2px solid var(--color-accent);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-  line-height: 1.5;
-}
 
 .app__result-count {
   display: flex;
@@ -248,16 +238,12 @@
 @media (max-width: 900px) {
   .app {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr;
+    /* The sidebar sizes to its content; the map takes everything left over. */
+    grid-template-rows: auto auto minmax(0, 1fr);
     grid-template-areas:
       "header"
       "sidebar"
       "map";
-  }
-
-  .app {
-    /* The sidebar sizes to its content; the map takes everything left over. */
-    grid-template-rows: auto auto minmax(0, 1fr);
   }
 
   .app__sidebar {
@@ -314,8 +300,8 @@
     display: none;
   }
 
-  /* On a phone the controls collapse to search plus the nearby button; the
-     decade chips and neighborhood select scroll within the strip. */
+  /* On a phone the controls stay compact; the decade chips and neighborhood
+     select scroll within the strip rather than pushing the map off-screen. */
   .app__sidebar {
     max-height: 24vh;
   }

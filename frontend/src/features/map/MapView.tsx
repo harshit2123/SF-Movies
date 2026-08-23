@@ -46,7 +46,7 @@ const ROUTE_LINE_STYLE = { color: COLOR_ACCENT, opacity: 0.75 };
 /** Downtown San Francisco — the opening view. */
 const SF_CENTER = { lat: 37.7793, lng: -122.4193 };
 
-/** Opening view, and the view returned to when nearby mode is switched off. */
+/** Opening view of the city. */
 const DEFAULT_ZOOM = 13;
 
 interface MapViewProps {

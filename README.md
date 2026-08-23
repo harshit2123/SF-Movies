@@ -54,9 +54,9 @@ The API never makes an outbound call. Data arrives only through the sync command
 │       ├── models.py      Film, FilmLocation
 │       ├── views.py       read-only endpoints
 │       ├── serializers.py three payload shapes: list, detail, marker
-│       ├── services/      socrata · mapper · ingest
+│       ├── services/      socrata · mapper · ingest · geo
 │       ├── management/    sync_film_locations
-│       └── tests/         100 tests, fixture trimmed from real data
+│       └── tests/         114 tests, fixture trimmed from real data
 ├── frontend/src/
 │   ├── features/          map · search · filters · film-detail
 │   ├── hooks/             url-state · debounce · geolocation
@@ -93,7 +93,7 @@ npm run dev                                # http://localhost:5173
 **Tests:**
 
 ```bash
-cd backend && pytest                        # 100 tests, 97% coverage, no network
+cd backend && pytest                        # 114 tests, 97% coverage, no network
 cd frontend && npx tsc --noEmit             # type check
 ```
 
@@ -137,11 +137,12 @@ Full reference: **[docs/API.md](docs/API.md)**
 | `GET /api/films/autocomplete/?q=` | Search suggestions, capped at 10 |
 | `GET /api/films/{slug}/` | Detail with all locations |
 | `GET /api/locations/` | Map markers. `?film=` `?bbox=` |
+| `GET /api/locations/nearby/?lat=&lng=` | Locations within a radius, nearest first |
 | `GET /api/health/` | Liveness and data freshness |
 
 ```bash
 curl "localhost:8000/api/films/autocomplete/?q=bulli"
-curl "localhost:8000/api/locations/?film=vertigo-1958"
+curl "localhost:8000/api/locations/nearby/?lat=37.8024&lng=-122.4058&radius_km=0.3"
 ```
 
 ---
@@ -179,7 +180,7 @@ code it justifies.
 | [0005](docs/decisions/0005-hosting.md) | Fly.io for the API, Vercel for the SPA — *superseded by 0007* |
 | [0006](docs/decisions/0006-scope-cuts.md) | Deliberate scope cuts, each with its trigger to revisit |
 | [0007](docs/decisions/0007-single-vercel-deployment.md) | **One Vercel project**, database baked in at build time |
-| [0008](docs/decisions/0008-no-geolocation.md) | **No geolocation** — removed after building it |
+| [0008](docs/decisions/0008-no-geolocation.md) | **No geolocation in the UI** — the endpoint stays |
 
 Two are worth reading first, because both record a **rejection**:
 
@@ -223,7 +224,7 @@ disambiguate two title-and-year collisions.
 
 ## Testing
 
-100 tests, 97% coverage. **No test touches the network** —
+114 tests, 97% coverage. **No test touches the network** —
 the Socrata fixture is trimmed from a real response and includes rows with and
 without coordinates, a multi-location film, and rows carrying `fun_facts`.
 
@@ -313,9 +314,11 @@ Stated plainly, since the challenge asks.
 
 ## Known limits
 
-- **No geolocation.** A "filmed near me" control was built and then removed:
+- **No geolocation in the interface.** A "filmed near me" control was removed:
   most visitors to a San Francisco map are not in San Francisco, so its usual
-  answer was an empty result after a permission prompt
+  answer was an empty result after a permission prompt. The
+  `/api/locations/nearby/` endpoint stays, tested and documented, for consumers
+  that do know their user's position
   ([ADR-0008](docs/decisions/0008-no-geolocation.md)).
 - **Search is substring, not fuzzy.** `godfath` matches; `godfathr` does not.
   Documented upgrade path in [ADR-0004](docs/decisions/0004-sqlite-and-search.md).

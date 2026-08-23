@@ -103,3 +103,11 @@ class MapMarkerSerializer(serializers.ModelSerializer):
             "neighborhood",
         ]
 
+
+class NearbyLocationSerializer(MapMarkerSerializer):
+    """A marker plus its distance from the query point, annotated by the view."""
+
+    distance_km = serializers.FloatField(read_only=True)
+
+    class Meta(MapMarkerSerializer.Meta):
+        fields = MapMarkerSerializer.Meta.fields + ["distance_km"]
