@@ -68,9 +68,19 @@ Answer the prompts:
 | Set up and deploy? | **Y** |
 | Which scope? | your account |
 | Link to existing project? | **N** |
-| Project name? | `sf-on-film` (or anything free) |
+| Project name? | anything free |
 | In which directory is your code located? | **`./`** ← the root, not `frontend` |
 | Modify settings? | **N** — `vercel.json` already has them |
+
+**"Multiple services were detected"** — newer CLI versions notice `frontend/` and
+`backend/` and offer to create a project per service. Decline that: this repository
+is deliberately one project, with `vercel.json` at the root building both halves.
+Choose **`Set up project with "frontend"`** and set the root directory to `./`, or
+skip the prompt entirely:
+
+```bash
+vercel --prod --yes
+```
 
 The first build takes ~2 minutes: it installs Python dependencies, pulls 2,214 rows
 from DataSF, then builds the SPA.
