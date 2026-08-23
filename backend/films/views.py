@@ -22,21 +22,12 @@ from films.serializers import (
     FilmDetailSerializer,
     FilmListSerializer,
     MapMarkerSerializer,
-    NearbyLocationSerializer,
-)
-from films.services.geo import (
-    DEFAULT_RADIUS_KM,
-    MAX_RADIUS_KM,
-    bounding_box,
-    haversine_km,
 )
 
 logger = logging.getLogger("films.views")
 
 AUTOCOMPLETE_MIN_LENGTH = 2
 AUTOCOMPLETE_LIMIT = 10
-NEARBY_DEFAULT_LIMIT = 50
-NEARBY_MAX_LIMIT = 200
 
 
 # Film fields searched by `?search=`. Written as bare lookups so the same list can
@@ -220,70 +211,6 @@ class MapMarkerListView(ListAPIView):
             longitude__gte=min_lng,
             longitude__lte=max_lng,
         )
-
-
-def _float_param(params, name: str, required: bool = True, default: float = 0.0):
-    """Parse a float query parameter, raising a 400 with a useful message."""
-    raw = params.get(name, "").strip()
-    if not raw:
-        if required:
-            raise ValidationError({name: "This parameter is required."})
-        return default
-    try:
-        return float(raw)
-    except ValueError:
-        raise ValidationError({name: f"Must be a number, got {raw!r}."})
-
-
-@api_view(["GET"])
-def nearby_locations(request):
-    """
-    Mappable locations within a radius of a point, nearest first.
-
-    A bounding box narrows candidates using the (latitude, longitude) index, then
-    Haversine computes exact distances over what survives (ADR-0006).
-    """
-    params = request.query_params
-
-    lat = _float_param(params, "lat")
-    lng = _float_param(params, "lng")
-    if not -90 <= lat <= 90:
-        raise ValidationError({"lat": "Must be between -90 and 90."})
-    if not -180 <= lng <= 180:
-        raise ValidationError({"lng": "Must be between -180 and 180."})
-
-    radius_km = _float_param(params, "radius_km", required=False, default=DEFAULT_RADIUS_KM)
-    if radius_km <= 0:
-        raise ValidationError({"radius_km": "Must be greater than zero."})
-    radius_km = min(radius_km, MAX_RADIUS_KM)
-
-    try:
-        limit = min(int(params.get("limit", NEARBY_DEFAULT_LIMIT)), NEARBY_MAX_LIMIT)
-    except ValueError:
-        raise ValidationError({"limit": "Must be an integer."})
-
-    min_lat, max_lat, min_lng, max_lng = bounding_box(lat, lng, radius_km)
-    candidates = (
-        FilmLocation.objects.mappable()
-        .select_related("film")
-        .filter(
-            latitude__gte=min_lat,
-            latitude__lte=max_lat,
-            longitude__gte=min_lng,
-            longitude__lte=max_lng,
-        )
-    )
-
-    within = []
-    for location in candidates:
-        distance = haversine_km(lat, lng, location.latitude, location.longitude)
-        # The box over-selects at its corners; this discards them.
-        if distance <= radius_km:
-            location.distance_km = round(distance, 3)
-            within.append(location)
-
-    within.sort(key=lambda loc: loc.distance_km)
-    return Response(NearbyLocationSerializer(within[:limit], many=True).data)
 
 
 @api_view(["GET"])

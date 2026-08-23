@@ -13,18 +13,13 @@ import { FilterPanel } from "./features/filters/FilterPanel";
 import { MapLegend } from "./features/map/MapLegend";
 import { MapView } from "./features/map/MapView";
 import { SearchAutocomplete } from "./features/search/SearchAutocomplete";
-import { useGeolocation } from "./hooks/useGeolocation";
 import { useUrlState } from "./hooks/useUrlState";
-import { useFilm, useFilms, useHealth, useMarkers, useNearby } from "./lib/queries";
+import { useFilm, useFilms, useHealth, useMarkers } from "./lib/queries";
 
 import "./styles/app.css";
 
-/** Radius for the "filmed near me" view. Walking distance, roughly. */
-const NEARBY_RADIUS_KM = 1.5;
-
 export default function App() {
   const { state, update, reset } = useUrlState();
-  const geo = useGeolocation();
 
   const filters = useMemo(
     () => ({
@@ -39,23 +34,7 @@ export default function App() {
   const films = useFilms(filters);
   const markers = useMarkers(filters);
   const selectedFilm = useFilm(state.film);
-  const nearby = useNearby(
-    state.nearby ? geo.position : null,
-    NEARBY_RADIUS_KM,
-  );
-
-  // In nearby mode the map shows only what is within walking distance.
-  const visibleMarkers = state.nearby && nearby.data ? nearby.data : markers.data ?? [];
-
-  const toggleNearby = () => {
-    if (state.nearby) {
-      update({ nearby: false });
-      geo.clear();
-      return;
-    }
-    geo.locate();
-    update({ nearby: true });
-  };
+  const visibleMarkers = markers.data ?? [];
 
   // Clicking a frame in the filmstrip pans the map to that location.
   const [focusedLocationId, setFocusedLocationId] = useState<number | null>(null);
@@ -103,20 +82,15 @@ export default function App() {
           facets={films.data?.facets}
           decade={state.decade}
           neighborhood={state.neighborhood}
-          nearbyActive={state.nearby}
-          locating={geo.status === "locating"}
           onDecadeChange={(decade) => update({ decade })}
           onNeighborhoodChange={(neighborhood) => update({ neighborhood })}
-          onToggleNearby={toggleNearby}
         />
-
-        {geo.message && <p className="app__notice">{geo.message}</p>}
 
         <p className="app__result-count">
           {markers.isFetching && !markers.data
             ? "Loading locations…"
             : `${visibleMarkers.length} locations shown`}
-          {(state.search || state.decade || state.neighborhood || state.nearby) && (
+          {(state.search || state.decade || state.neighborhood) && (
             <button className="app__clear" onClick={reset}>
               Clear
             </button>
@@ -140,7 +114,6 @@ export default function App() {
             <MapView
               markers={visibleMarkers}
               selectedFilm={selectedFilm.data ?? null}
-              userPosition={state.nearby ? geo.position : null}
               focusedPoint={focusedPoint}
               isFiltered={Boolean(
                 state.neighborhood || state.decade || state.search,

@@ -19,6 +19,5 @@ router.register(r"films", views.FilmViewSet, basename="film")
 urlpatterns = [
     path("api/", include(router.urls)),
     path("api/locations/", views.MapMarkerListView.as_view(), name="locations"),
-    path("api/locations/nearby/", views.nearby_locations, name="locations-nearby"),
     path("api/health/", views.health, name="health"),
 ]

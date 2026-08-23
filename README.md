@@ -54,9 +54,9 @@ The API never makes an outbound call. Data arrives only through the sync command
 │       ├── models.py      Film, FilmLocation
 │       ├── views.py       read-only endpoints
 │       ├── serializers.py three payload shapes: list, detail, marker
-│       ├── services/      socrata · mapper · ingest · geo
+│       ├── services/      socrata · mapper · ingest
 │       ├── management/    sync_film_locations
-│       └── tests/         114 tests, fixture trimmed from real data
+│       └── tests/         100 tests, fixture trimmed from real data
 ├── frontend/src/
 │   ├── features/          map · search · filters · film-detail
 │   ├── hooks/             url-state · debounce · geolocation
@@ -93,7 +93,7 @@ npm run dev                                # http://localhost:5173
 **Tests:**
 
 ```bash
-cd backend && pytest                        # 114 tests, 97% coverage, no network
+cd backend && pytest                        # 100 tests, 97% coverage, no network
 cd frontend && npx tsc --noEmit             # type check
 ```
 
@@ -137,12 +137,11 @@ Full reference: **[docs/API.md](docs/API.md)**
 | `GET /api/films/autocomplete/?q=` | Search suggestions, capped at 10 |
 | `GET /api/films/{slug}/` | Detail with all locations |
 | `GET /api/locations/` | Map markers. `?film=` `?bbox=` |
-| `GET /api/locations/nearby/?lat=&lng=` | Locations within a radius, nearest first |
 | `GET /api/health/` | Liveness and data freshness |
 
 ```bash
 curl "localhost:8000/api/films/autocomplete/?q=bulli"
-curl "localhost:8000/api/locations/nearby/?lat=37.8024&lng=-122.4058&radius_km=0.3"
+curl "localhost:8000/api/locations/?film=vertigo-1958"
 ```
 
 ---
@@ -180,6 +179,7 @@ code it justifies.
 | [0005](docs/decisions/0005-hosting.md) | Fly.io for the API, Vercel for the SPA — *superseded by 0007* |
 | [0006](docs/decisions/0006-scope-cuts.md) | Deliberate scope cuts, each with its trigger to revisit |
 | [0007](docs/decisions/0007-single-vercel-deployment.md) | **One Vercel project**, database baked in at build time |
+| [0008](docs/decisions/0008-no-geolocation.md) | **No geolocation** — removed after building it |
 
 Two are worth reading first, because both record a **rejection**:
 
@@ -223,7 +223,7 @@ disambiguate two title-and-year collisions.
 
 ## Testing
 
-114 tests, 97% coverage. **No test touches the network** —
+100 tests, 97% coverage. **No test touches the network** —
 the Socrata fixture is trimmed from a real response and includes rows with and
 without coordinates, a multi-location film, and rows carrying `fun_facts`.
 
@@ -246,10 +246,11 @@ would have caught either:
   with `unable to open database file` while the file was demonstrably present.
   SQLite creates a journal beside the database even to read it, which a read-only
   filesystem refuses. Fixed by opening it as `file:...?mode=ro&immutable=1`.
-- **The map never returned from "near me".** Leaving nearby mode left the view
-  wherever the user physically was. Reproduced by geolocating a headless browser
-  to New York, which showed an empty Atlantic while the sidebar reported 2,120
-  locations.
+- **The map ignored filter changes.** Selecting a neighbourhood filtered the data
+  without moving the view, so choosing somewhere off-screen looked like it had done
+  nothing. Every focus component only acted on a non-null value, so no code owned
+  the camera when a filter changed. (The same flaw stranded the map after
+  geolocation, a feature since removed — [ADR-0008](docs/decisions/0008-no-geolocation.md).)
 
 The frontend was verified with Playwright at 390/768/1440px — no horizontal
 overflow, no console errors, deep links restoring state, keyboard selection working.
@@ -312,6 +313,10 @@ Stated plainly, since the challenge asks.
 
 ## Known limits
 
+- **No geolocation.** A "filmed near me" control was built and then removed:
+  most visitors to a San Francisco map are not in San Francisco, so its usual
+  answer was an empty result after a permission prompt
+  ([ADR-0008](docs/decisions/0008-no-geolocation.md)).
 - **Search is substring, not fuzzy.** `godfath` matches; `godfathr` does not.
   Documented upgrade path in [ADR-0004](docs/decisions/0004-sqlite-and-search.md).
 - **No rate limiting.** Deliberate for a read-only demo

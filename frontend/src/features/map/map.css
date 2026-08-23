@@ -41,12 +41,6 @@
   stroke-width: 2;
 }
 
-.marker--user {
-  fill: var(--color-text);
-  fill-opacity: 0.9;
-  stroke: var(--color-accent);
-  stroke-width: 3;
-}
 
 .route-line {
   stroke: var(--color-accent);

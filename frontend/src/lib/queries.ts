@@ -18,8 +18,6 @@ export const queryKeys = {
   autocomplete: (q: string) => ["autocomplete", q] as const,
   film: (slug: string) => ["film", slug] as const,
   films: (filters: FilmFilters) => ["films", filters] as const,
-  nearby: (lat: number, lng: number, radius: number) =>
-    ["nearby", lat, lng, radius] as const,
   health: () => ["health"] as const,
 };
 
@@ -59,18 +57,6 @@ export function useFilms(filters: FilmFilters) {
     queryFn: ({ signal }) => api.films(filters, signal),
     staleTime: STALE_TIME,
     placeholderData: (previous) => previous,
-  });
-}
-
-export function useNearby(
-  coords: { lat: number; lng: number } | null,
-  radiusKm: number,
-) {
-  return useQuery({
-    queryKey: queryKeys.nearby(coords?.lat ?? 0, coords?.lng ?? 0, radiusKm),
-    queryFn: ({ signal }) => api.nearby(coords!.lat, coords!.lng, radiusKm, signal),
-    enabled: Boolean(coords),
-    staleTime: STALE_TIME,
   });
 }
 

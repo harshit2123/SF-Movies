@@ -1,5 +1,5 @@
 /**
- * Decade and neighborhood filters, plus the nearby control.
+ * Decade and neighborhood filters.
  *
  * Facet values come from the films response rather than a separate request
  * (ADR-0006), so this component renders whatever the dataset currently contains.
@@ -13,22 +13,16 @@ interface FilterPanelProps {
   facets: Facets | undefined;
   decade: number | null;
   neighborhood: string | null;
-  nearbyActive: boolean;
-  locating: boolean;
   onDecadeChange: (decade: number | null) => void;
   onNeighborhoodChange: (neighborhood: string | null) => void;
-  onToggleNearby: () => void;
 }
 
 export function FilterPanel({
   facets,
   decade,
   neighborhood,
-  nearbyActive,
-  locating,
   onDecadeChange,
   onNeighborhoodChange,
-  onToggleNearby,
 }: FilterPanelProps) {
   return (
     <div className="filters">
@@ -70,17 +64,6 @@ export function FilterPanel({
         </select>
       </div>
 
-      <button
-        className={`nearby ${nearbyActive ? "nearby--active" : ""}`}
-        onClick={onToggleNearby}
-        disabled={locating}
-      >
-        {locating
-          ? "Finding you…"
-          : nearbyActive
-            ? "Show the whole city"
-            : "Filmed near me"}
-      </button>
     </div>
   );
 }

@@ -12,14 +12,9 @@ import pytest
 from rest_framework.test import APIClient
 
 from films.models import Film, FilmLocation
-from films.services.geo import bounding_box, haversine_km
 from films.services.ingest import ingest_rows
 
 FIXTURE = Path(__file__).parent / "fixtures_socrata.json"
-
-# Coit Tower, from the fixture — a real point used for geo assertions.
-COIT_TOWER = (37.8023949, -122.4058222)
-
 
 @pytest.fixture
 def client() -> APIClient:
@@ -236,70 +231,6 @@ def test_locations_malformed_bbox_returns_400(client, seeded, bbox):
     assert "bbox" in response.data
 
 
-# ---------------------------------------------------------------- nearby
-
-
-@pytest.mark.django_db
-def test_nearby_returns_closest_first(client, seeded):
-    lat, lng = COIT_TOWER
-
-    response = client.get(f"/api/locations/nearby/?lat={lat}&lng={lng}&radius_km=20")
-
-    assert response.status_code == 200
-    distances = [m["distance_km"] for m in response.data]
-    assert distances == sorted(distances)
-
-
-@pytest.mark.django_db
-def test_nearby_finds_the_point_itself(client, seeded):
-    lat, lng = COIT_TOWER
-
-    response = client.get(f"/api/locations/nearby/?lat={lat}&lng={lng}&radius_km=0.1")
-
-    assert response.data[0]["location_text"] == "Coit Tower"
-    assert response.data[0]["distance_km"] == pytest.approx(0, abs=0.01)
-
-
-@pytest.mark.django_db
-def test_nearby_respects_radius(client, seeded):
-    lat, lng = COIT_TOWER
-
-    tight = client.get(f"/api/locations/nearby/?lat={lat}&lng={lng}&radius_km=0.2")
-    wide = client.get(f"/api/locations/nearby/?lat={lat}&lng={lng}&radius_km=20")
-
-    assert len(tight.data) < len(wide.data)
-    assert all(m["distance_km"] <= 0.2 for m in tight.data)
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize(
-    "query,field",
-    [
-        ("lng=-122.4", "lat"),
-        ("lat=37.8", "lng"),
-        ("lat=999&lng=-122.4", "lat"),
-        ("lat=37.8&lng=999", "lng"),
-        ("lat=abc&lng=-122.4", "lat"),
-        ("lat=37.8&lng=-122.4&radius_km=0", "radius_km"),
-    ],
-)
-def test_nearby_rejects_invalid_input(client, seeded, query, field):
-    response = client.get(f"/api/locations/nearby/?{query}")
-
-    assert response.status_code == 400
-    assert field in response.data
-
-
-@pytest.mark.django_db
-def test_nearby_caps_excessive_radius(client, seeded):
-    lat, lng = COIT_TOWER
-
-    response = client.get(f"/api/locations/nearby/?lat={lat}&lng={lng}&radius_km=9999")
-
-    # Clamped rather than rejected — a huge radius is a usable intent.
-    assert response.status_code == 200
-
-
 # ---------------------------------------------------------------- health
 
 
@@ -322,36 +253,3 @@ def test_health_reports_degraded_when_empty(client):
     assert response.data["status"] == "degraded"
     assert "sync_film_locations" in response.data["detail"]
 
-
-# ---------------------------------------------------------------- geo helpers
-
-
-def test_haversine_matches_known_distance():
-    # Coit Tower to the Golden Gate Bridge is roughly 5.6 km.
-    distance = haversine_km(37.8023949, -122.4058222, 37.8199, -122.4783)
-
-    assert distance == pytest.approx(6.5, abs=1.0)
-
-
-def test_haversine_is_zero_for_identical_points():
-    assert haversine_km(*COIT_TOWER, *COIT_TOWER) == pytest.approx(0, abs=1e-9)
-
-
-def test_haversine_is_symmetric():
-    a = haversine_km(37.80, -122.40, 37.75, -122.45)
-    b = haversine_km(37.75, -122.45, 37.80, -122.40)
-
-    assert a == pytest.approx(b)
-
-
-def test_bounding_box_encloses_the_search_circle():
-    lat, lng = COIT_TOWER
-    min_lat, max_lat, min_lng, max_lng = bounding_box(lat, lng, 1.0)
-
-    assert min_lat < lat < max_lat
-    assert min_lng < lng < max_lng
-    # The box touches the circle at the axes...
-    assert haversine_km(lat, lng, max_lat, lng) == pytest.approx(1.0, abs=1e-6)
-    assert haversine_km(lat, lng, lat, max_lng) == pytest.approx(1.0, abs=1e-6)
-    # ...and over-selects at the corners, which the exact distance check discards.
-    assert haversine_km(lat, lng, max_lat, max_lng) > 1.0

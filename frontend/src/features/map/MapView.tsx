@@ -7,7 +7,7 @@
  * everything else recedes.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CircleMarker,
   MapContainer,
@@ -21,7 +21,6 @@ import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 
 import type { FilmDetail, MapMarker } from "../../lib/api";
-import { SF_CENTER } from "../../hooks/useGeolocation";
 
 import "leaflet/dist/leaflet.css";
 import "./map.css";
@@ -34,7 +33,6 @@ import "./map.css";
 const COLOR_META = "#6b8f71";
 const COLOR_ACCENT = "#d94f2a";
 const COLOR_BASE = "#0e0e10";
-const COLOR_TEXT = "#e8e4dc";
 
 const BACKDROP_STYLE = {
   color: COLOR_BASE,
@@ -43,14 +41,10 @@ const BACKDROP_STYLE = {
   fillOpacity: 0.55,
 };
 
-const USER_STYLE = {
-  color: COLOR_ACCENT,
-  weight: 3,
-  fillColor: COLOR_TEXT,
-  fillOpacity: 0.9,
-};
-
 const ROUTE_LINE_STYLE = { color: COLOR_ACCENT, opacity: 0.75 };
+
+/** Downtown San Francisco — the opening view. */
+const SF_CENTER = { lat: 37.7793, lng: -122.4193 };
 
 /** Opening view, and the view returned to when nearby mode is switched off. */
 const DEFAULT_ZOOM = 13;
@@ -58,7 +52,6 @@ const DEFAULT_ZOOM = 13;
 interface MapViewProps {
   markers: MapMarker[];
   selectedFilm: FilmDetail | null;
-  userPosition: { lat: number; lng: number } | null;
   /** Set when a filmstrip frame is clicked, so the map pans to that location. */
   focusedPoint: { lat: number; lng: number } | null;
   /** True while a filter narrows the map, so the view refits to the results. */
@@ -103,35 +96,6 @@ function RouteFocus({ film }: { film: FilmDetail | null }) {
       duration: 0.6,
     });
   }, [film, map]);
-
-  return null;
-}
-
-/**
- * Centers on the user when their position arrives, and returns to the city when
- * they leave nearby mode.
- *
- * The return leg matters: without it, turning nearby off left the map wherever
- * the user happened to be — often nowhere near San Francisco — showing an empty
- * view of the correct data.
- */
-function UserFocus({ position }: { position: { lat: number; lng: number } | null }) {
-  const map = useMap();
-  const wasLocated = useRef(false);
-
-  useEffect(() => {
-    if (position) {
-      wasLocated.current = true;
-      map.flyTo([position.lat, position.lng], 15, { duration: 0.6 });
-      return;
-    }
-    // Only fly back if we had actually moved away, so this does not fight the
-    // initial view or a film route on first load.
-    if (wasLocated.current) {
-      wasLocated.current = false;
-      map.flyTo([SF_CENTER.lat, SF_CENTER.lng], DEFAULT_ZOOM, { duration: 0.6 });
-    }
-  }, [position, map]);
 
   return null;
 }
@@ -291,7 +255,6 @@ function escapeHtml(value: string): string {
 export function MapView({
   markers,
   selectedFilm,
-  userPosition,
   focusedPoint,
   isFiltered,
   onSelectFilm,
@@ -329,10 +292,9 @@ export function MapView({
       />
 
       <RouteFocus film={selectedFilm} />
-      <UserFocus position={userPosition} />
       <FilterFocus
         markers={markers}
-        enabled={isFiltered && !selectedFilm && !userPosition}
+        enabled={isFiltered && !selectedFilm}
       />
       <PointFocus point={focusedPoint} />
 
@@ -404,16 +366,6 @@ export function MapView({
           </Marker>
         ))}
 
-      {userPosition && (
-        <CircleMarker
-          center={[userPosition.lat, userPosition.lng]}
-          radius={8}
-          className="marker--user"
-          pathOptions={USER_STYLE}
-        >
-          <Popup>You are here</Popup>
-        </CircleMarker>
-      )}
     </MapContainer>
   );
 }

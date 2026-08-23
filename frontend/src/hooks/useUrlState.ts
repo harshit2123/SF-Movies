@@ -14,7 +14,6 @@ export interface AppState {
   decade: number | null;
   neighborhood: string | null;
   film: string | null;
-  nearby: boolean;
 }
 
 const EMPTY: AppState = {
@@ -22,7 +21,6 @@ const EMPTY: AppState = {
   decade: null,
   neighborhood: null,
   film: null,
-  nearby: false,
 };
 
 function parse(searchParams: URLSearchParams): AppState {
@@ -33,7 +31,6 @@ function parse(searchParams: URLSearchParams): AppState {
     decade: decade && !Number.isNaN(Number(decade)) ? Number(decade) : null,
     neighborhood: searchParams.get("neighborhood"),
     film: searchParams.get("film"),
-    nearby: searchParams.get("nearby") === "1",
   };
 }
 
@@ -43,7 +40,6 @@ function serialize(state: AppState): string {
   if (state.decade !== null) params.set("decade", String(state.decade));
   if (state.neighborhood) params.set("neighborhood", state.neighborhood);
   if (state.film) params.set("film", state.film);
-  if (state.nearby) params.set("nearby", "1");
   return params.toString();
 }
 

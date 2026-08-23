@@ -3,7 +3,8 @@ Data model for the DataSF Film Locations dataset.
 
 The source is flat — one row per (film, location) pair, with film details repeated
 across every row for the same film. That denormalization is undone here: 2,214 source
-rows become 350 `Film` records and 2,214 `FilmLocation` records.
+rows become 352 `Film` records and 2,207 `FilmLocation` records — see ADR-0001 for
+why the stored counts differ from the published ones.
 """
 
 import hashlib
@@ -51,7 +52,7 @@ class Film(models.Model):
 
 class FilmLocationQuerySet(models.QuerySet):
     def mappable(self) -> "FilmLocationQuerySet":
-        """Only locations that can be plotted — excludes the 86 coordinate-less rows."""
+        """Only locations that can be plotted — excludes the 87 unmappable rows."""
         return self.filter(is_mappable=True)
 
 
@@ -60,8 +61,9 @@ class FilmLocation(models.Model):
     One filming location for one film.
 
     Coordinates come straight from DataSF, which publishes them for 2,128 of 2,214
-    rows (ADR-0001). The remaining 86 are kept with `is_mappable=False` rather than
-    dropped: they stay searchable and visible in film detail, but never reach the map.
+    source rows (ADR-0001). Rows without usable coordinates are kept with
+    `is_mappable=False` rather than dropped: they stay searchable and visible in film
+    detail, but never reach the map.
     """
 
     film = models.ForeignKey(Film, on_delete=models.CASCADE, related_name="locations")
@@ -91,7 +93,7 @@ class FilmLocation(models.Model):
     class Meta:
         ordering = ["film__title", "location_text"]
         indexes = [
-            # Bounding-box viewport queries and the nearby prefilter.
+            # Bounding-box viewport queries from the map.
             models.Index(fields=["latitude", "longitude"]),
             models.Index(fields=["is_mappable", "neighborhood"]),
         ]

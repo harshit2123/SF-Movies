@@ -71,10 +71,6 @@ export interface MapMarker {
   neighborhood: string;
 }
 
-export interface NearbyMarker extends MapMarker {
-  distance_km: number;
-}
-
 export interface Facets {
   decades: number[];
   neighborhoods: string[];
@@ -176,17 +172,6 @@ export const api = {
   markers: (filters: FilmFilters & { film?: string } = {}, signal?: AbortSignal) =>
     request<MapMarker[]>("/api/locations/", { ...filters }, signal),
 
-  nearby: (
-    lat: number,
-    lng: number,
-    radiusKm: number,
-    signal?: AbortSignal,
-  ) =>
-    request<NearbyMarker[]>(
-      "/api/locations/nearby/",
-      { lat, lng, radius_km: radiusKm },
-      signal,
-    ),
 
   health: (signal?: AbortSignal) => request<Health>("/api/health/", {}, signal),
 };
