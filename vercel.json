@@ -3,6 +3,11 @@
   "buildCommand": "bash ./build.sh",
   "outputDirectory": "frontend/dist",
   "installCommand": "npm --prefix frontend install",
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "backend/(config|films)/**/*.py|backend/db.sqlite3"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",

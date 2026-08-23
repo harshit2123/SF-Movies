@@ -244,7 +244,14 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        # The manifest backend requires a collectstatic run and raises on a
+        # missing manifest. The deployed surface is a JSON API plus a separately
+        # built SPA, so nothing serves Django static files in production.
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if IS_SERVERLESS
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        )
     },
 }
 

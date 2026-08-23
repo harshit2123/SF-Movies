@@ -20,7 +20,10 @@ python3 manage.py migrate --noinput
 # A failed sync fails the build: an empty database would deploy "healthy" and
 # serve an empty map.
 python3 manage.py sync_film_locations
-python3 manage.py collectstatic --noinput
+# No collectstatic: the SPA is the frontend, and the API serves JSON. The only
+# consumer of Django's static files is the admin, which is not part of the
+# deployed surface. Collecting them also breaks the upload, since staticfiles/
+# is gitignored and Vercel's uploader honours that.
 python3 -c "
 import os, django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE','config.settings')
