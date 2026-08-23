@@ -145,15 +145,22 @@
   font-size: 10px;
   font-weight: 700;
   box-shadow: 0 0 0 1px var(--color-accent-glow);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out);
 }
 
+/*
+ * Route labels appear on hover only. A film's stops are often a block apart, so
+ * showing every name at once produced overlapping boxes that hid the route —
+ * the numbered badges carry the sequence, and the panel lists every name in full.
+ */
 .frame__label {
   position: absolute;
   left: 28px;
   top: 2px;
-  max-width: 200px;
+  max-width: 220px;
   padding: 2px 6px;
-  background: rgba(14, 14, 16, 0.9);
+  background: rgba(14, 14, 16, 0.94);
   border: 1px solid var(--color-accent);
   border-radius: var(--radius-sm);
   color: var(--color-text);
@@ -161,10 +168,25 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-4px);
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
 }
 
 .frame:hover {
   z-index: 1000 !important;
+}
+
+.frame:hover .frame__label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.frame:hover .frame__badge {
+  transform: scale(1.15);
 }
 
 /* --- Clusters ------------------------------------------------------------

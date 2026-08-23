@@ -10,6 +10,7 @@ import { useMemo, useState } from "react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { FilmPanel } from "./features/film-detail/FilmPanel";
 import { FilterPanel } from "./features/filters/FilterPanel";
+import { MapLegend } from "./features/map/MapLegend";
 import { MapView } from "./features/map/MapView";
 import { SearchAutocomplete } from "./features/search/SearchAutocomplete";
 import { useGeolocation } from "./hooks/useGeolocation";
@@ -121,6 +122,8 @@ export default function App() {
             </button>
           )}
         </p>
+
+        <MapLegend hasSelection={Boolean(selectedFilm.data)} />
       </aside>
 
       <main className="app__map">

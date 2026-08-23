@@ -89,7 +89,7 @@ export function SearchAutocomplete({
           id="film-search"
           type="search"
           className="search__input"
-          placeholder="Film, director, or actor"
+          placeholder="Try Bullitt, Vertigo, or Eastwood"
           value={value}
           onChange={(event) => {
             onChange(event.target.value);
