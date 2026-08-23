@@ -122,6 +122,13 @@ curl "localhost:8000/api/locations/nearby/?lat=37.8024&lng=-122.4058&radius_km=0
 
 ---
 
+## Deploying
+
+Full walkthrough: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — Fly.io for the API
+(SQLite on a persistent volume), Vercel for the SPA, about 20 minutes end to end.
+
+---
+
 ## Decisions
 
 Every meaningful choice is recorded in **[docs/decisions/](docs/decisions/)** as

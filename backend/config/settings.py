@@ -16,7 +16,10 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / ".env")
+# Local development convenience only. `override=False` is the important part:
+# real environment variables always win, so a stray .env inside a container
+# cannot quietly shadow the secrets the platform injected.
+load_dotenv(BASE_DIR / ".env", override=False)
 
 
 # --------------------------------------------------------------------------
