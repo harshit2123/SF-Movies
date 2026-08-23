@@ -124,8 +124,19 @@ curl "localhost:8000/api/locations/nearby/?lat=37.8024&lng=-122.4058&radius_km=0
 
 ## Deploying
 
-Full walkthrough: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — Fly.io for the API
-(SQLite on a persistent volume), Vercel for the SPA, about 20 minutes end to end.
+Full walkthrough: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
+
+One Vercel project serves both halves — free, no payment card, about 10 minutes:
+
+```bash
+npm i -g vercel && vercel login
+vercel --prod                    # from the repository root
+```
+
+The database is created and loaded from DataSF during the build, then baked into
+the deployment and read at runtime. That works because the API never writes: the
+only writer is the sync command, which runs at build time ([ADR-0007](docs/decisions/0007-single-vercel-deployment.md)).
+Refreshing data is therefore a redeploy.
 
 ---
 
@@ -141,8 +152,9 @@ code it justifies.
 | [0002](docs/decisions/0002-no-geocoding.md) | **No geocoding** — why the usual Nominatim step is unnecessary |
 | [0003](docs/decisions/0003-no-websockets.md) | **No WebSockets** — batch data, HTTP GET is correct |
 | [0004](docs/decisions/0004-sqlite-and-search.md) | SQLite over Postgres; substring search over trigram |
-| [0005](docs/decisions/0005-hosting.md) | Fly.io for the API, Vercel for the SPA |
+| [0005](docs/decisions/0005-hosting.md) | Fly.io for the API, Vercel for the SPA — *superseded by 0007* |
 | [0006](docs/decisions/0006-scope-cuts.md) | Deliberate scope cuts, each with its trigger to revisit |
+| [0007](docs/decisions/0007-single-vercel-deployment.md) | **One Vercel project**, database baked in at build time |
 
 Two are worth reading first, because both record a **rejection**:
 

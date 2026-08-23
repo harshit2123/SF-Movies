@@ -6,7 +6,17 @@
  * tooling without adding safety (ADR-0006).
  */
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+/*
+ * In production the API and the SPA are served from one Vercel project, so
+ * requests are same-origin and no base URL is needed. In development Vite runs
+ * on :5173 and Django on :8000, so the default points at Django.
+ *
+ * Setting VITE_API_BASE_URL overrides both, for pointing the SPA at a separately
+ * hosted API.
+ */
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ??
+  (import.meta.env.PROD ? window.location.origin : "http://localhost:8000");
 
 // --- Response shapes -------------------------------------------------------
 

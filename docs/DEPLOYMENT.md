@@ -1,56 +1,34 @@
 # Deployment guide
 
-Backend on **Fly.io**, frontend on **Vercel**. Both have free tiers that cover this
-app. See [ADR-0005](decisions/0005-hosting.md) for why this split rather than a
-single platform.
+One Vercel project serves both the API and the SPA. **Free, and no payment card.**
+See [ADR-0007](decisions/0007-single-vercel-deployment.md) for why this replaced the
+original two-platform setup.
 
-Total time: about 20 minutes. Do the backend first — the frontend needs its URL.
-
----
-
-## Before you start
-
-| | |
-|---|---|
-| Fly.io account | https://fly.io/app/sign-up — needs a card for verification, not charged on the free allowance |
-| Vercel account | https://vercel.com/signup — GitHub sign-in is easiest |
-| Code on GitHub | Vercel deploys from a repository |
-
-Install both CLIs:
-
-```bash
-# Fly
-curl -L https://fly.io/install.sh | sh
-fly auth login
-
-# Vercel
-npm i -g vercel
-vercel login
-```
-
-**`zsh: command not found: fly` right after installing** — the installer adds the
-PATH entry to `~/.zshrc`, but the shell you are sitting in started before that
-edit and has not re-read the file. Reload it, or open a new terminal tab:
-
-```bash
-source ~/.zshrc
-fly version
-```
-
-Only if that still fails is the PATH entry genuinely missing:
-
-```bash
-grep -n FLYCTL ~/.zshrc                     # check before adding a duplicate
-export PATH="$HOME/.fly/bin:$PATH"          # this session
-```
+About 10 minutes.
 
 ---
 
-## Part 1 — Push to GitHub
+## How it works
+
+The database is built and populated **during the build**, then baked into the
+deployment and read at runtime. Vercel's filesystem restriction is on writes, and
+this API never writes — the only writer is the sync command, which runs at build time.
+
+```
+vercel build
+  ├─ backend/build.sh → migrate → sync from DataSF → collectstatic
+  └─ frontend         → npm run build
+```
+
+Because both halves share a domain, requests are same-origin: no CORS, and no API
+base URL to configure.
+
+---
+
+## Step 1 — Push to GitHub
 
 ```bash
 cd "/Users/harshit/Desktop/SF Movies"
-
 gh repo create sf-on-film --public --source=. --remote=origin --push
 ```
 
@@ -58,11 +36,10 @@ Without the `gh` CLI: create an empty repo on github.com, then
 
 ```bash
 git remote add origin https://github.com/YOUR_USERNAME/sf-on-film.git
-git branch -M main
-git push -u origin main
+git branch -M main && git push -u origin main
 ```
 
-Confirm `.env` files did **not** get committed — only `.env.example` should appear:
+Confirm no secrets were committed — only `.env.example` files should appear:
 
 ```bash
 git ls-files | grep env
@@ -70,235 +47,139 @@ git ls-files | grep env
 
 ---
 
-## Part 2 — Backend on Fly.io
-
-### 2.1 Create the app
+## Step 2 — Deploy
 
 ```bash
-cd "/Users/harshit/Desktop/SF Movies/backend"
-
-fly launch --no-deploy --copy-config --name sf-on-film-api --region sjc
+npm i -g vercel
+vercel login          # opens a browser; GitHub sign-in works
 ```
 
-- `--no-deploy` — set secrets before the first boot
-- `--copy-config` — use the committed `fly.toml` rather than generating one
-- If the name is taken, pick another and update `app = ` in `fly.toml`
-- Answer **no** to "create a Postgres/Redis database" — this app uses SQLite
-
-### 2.2 Create the volume
-
-SQLite needs a disk that survives restarts. This is the whole reason the app is on
-Fly rather than a serverless platform.
+Then from the repository root — **not** from `frontend/`:
 
 ```bash
-fly volumes create sf_film_data --region sjc --size 1
-```
-
-1 GB is far more than needed (the database is ~3 MB) and is the smallest offered.
-The name must match `[[mounts]] source` in `fly.toml`.
-
-### 2.3 Set secrets
-
-```bash
-# Generate a real key — never reuse the development one
-fly secrets set DJANGO_SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_urlsafe(50))')"
-
-fly secrets set DJANGO_ALLOWED_HOSTS="sf-on-film-api.fly.dev"
-
-# Placeholder until the Vercel URL exists; corrected in Part 4
-fly secrets set CORS_ALLOWED_ORIGINS="https://example.com"
-```
-
-Optional — a Socrata app token raises the rate limit. The sync works without one:
-
-```bash
-fly secrets set SOCRATA_APP_TOKEN="your-token"
-```
-
-Register at https://evergreen.data.socrata.com/profile/app_tokens
-
-### 2.4 Deploy
-
-```bash
-fly deploy
-```
-
-The Dockerfile installs dependencies, collects static files, and runs migrations on
-boot. First build takes ~3 minutes.
-
-### 2.5 Load the data
-
-The database starts empty, so `/api/health/` returns 503 until this runs:
-
-```bash
-fly ssh console -C "python manage.py sync_film_locations"
-```
-
-Expected:
-
-```
-  rows fetched        2214
-  films               +352 created, 0 updated
-  locations           +2207 created, 0 updated, 0 unchanged
-Sync complete.
-```
-
-### 2.6 Verify
-
-```bash
-curl https://sf-on-film-api.fly.dev/api/health/
-```
-
-Wants `"status": "ok"` and `"film_count": 352`.
-
----
-
-## Part 3 — Frontend on Vercel
-
-```bash
-cd "/Users/harshit/Desktop/SF Movies/frontend"
-
-vercel link          # accept defaults; scope to your account
-vercel env add VITE_API_BASE_URL production
-# paste: https://sf-on-film-api.fly.dev
-
+cd "/Users/harshit/Desktop/SF Movies"
 vercel --prod
 ```
 
-Vercel prints the live URL, e.g. `https://sf-on-film.vercel.app`.
+Answer the prompts:
 
-`VITE_API_BASE_URL` is read at **build time**, not runtime — changing it later
-requires a redeploy, not just an env update.
+| Prompt | Answer |
+|---|---|
+| Set up and deploy? | **Y** |
+| Which scope? | your account |
+| Link to existing project? | **N** |
+| Project name? | `sf-on-film` (or anything free) |
+| In which directory is your code located? | **`./`** ← the root, not `frontend` |
+| Modify settings? | **N** — `vercel.json` already has them |
 
-### Via the dashboard instead
+The first build takes ~2 minutes: it installs Python dependencies, pulls 2,214 rows
+from DataSF, then builds the SPA.
 
-1. vercel.com → **Add New** → **Project** → import the GitHub repo
-2. **Root Directory**: `frontend` ← easy to miss, and it fails without it
-3. Framework preset: Vite (detected)
-4. **Environment Variables**: `VITE_API_BASE_URL` = `https://sf-on-film-api.fly.dev`
-5. Deploy
+### One secret
+
+```bash
+vercel env add DJANGO_SECRET_KEY production
+# paste the output of:
+#   python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+
+vercel --prod        # redeploy so the new value is picked up
+```
+
+Django refuses to start in production without it, by design.
 
 ---
 
-## Part 4 — Connect them
-
-The API rejects browser requests from unknown origins, so point CORS at the real
-Vercel URL:
+## Step 3 — Verify
 
 ```bash
-cd "/Users/harshit/Desktop/SF Movies/backend"
+APP=https://sf-on-film.vercel.app     # your actual URL
 
-fly secrets set CORS_ALLOWED_ORIGINS="https://sf-on-film.vercel.app"
+curl -s $APP/api/health/              # "status": "ok", 352 films
+curl -s "$APP/api/films/autocomplete/?q=vertigo"
 ```
 
-Setting a secret restarts the app automatically. Wait ~30 seconds, then open the
-Vercel URL. The map should fill with markers.
+Then open the URL and check:
 
-Include every origin you use, comma-separated and with no trailing slash:
-
-```bash
-fly secrets set CORS_ALLOWED_ORIGINS="https://sf-on-film.vercel.app,https://sf-on-film-git-main-you.vercel.app"
-```
+- the map fills with clustered markers
+- searching `bullitt` draws a 23-stop route
+- zooming past street level replaces dots with film names
+- reloading a filtered URL restores the same view
 
 ---
 
-## Verifying the deployment
+## Refreshing the data
+
+Data is loaded at build time, so a refresh is a redeploy:
 
 ```bash
-API=https://sf-on-film-api.fly.dev
-
-curl -s $API/api/health/                                        # status ok, 352 films
-curl -s "$API/api/films/autocomplete/?q=vertigo"                # returns Vertigo
-curl -s "$API/api/locations/" | python3 -c 'import json,sys;print(len(json.load(sys.stdin)))'   # 2120
+vercel --prod
 ```
 
-Then in the browser: search `bullitt`, confirm the route draws, zoom in far enough
-for film names to appear, and reload a filtered URL to confirm state restores.
-
----
-
-## Keeping data fresh
-
-The dataset updates every few months. Re-running the sync is safe at any time —
-identity is derived from row content, so an unchanged dataset produces no writes.
-
-```bash
-fly ssh console -C "python manage.py sync_film_locations"
-```
-
-To schedule it, add a Fly machine running on a cron. There is deliberately no
-scheduler in the repository ([ADR-0006](decisions/0006-scope-cuts.md)) — a broker
-and a worker for one occasional job is more moving parts than the job deserves.
+Or push to `main`, if the GitHub integration is connected. Re-running is safe:
+ingestion is idempotent, so an unchanged dataset produces no writes.
 
 ---
 
 ## Troubleshooting
 
-**Map is empty, console shows a CORS error**
-`CORS_ALLOWED_ORIGINS` does not match the browser's origin. Check for a trailing
-slash or `http` vs `https`:
-```bash
-fly secrets list
-```
+**Build fails: `sync_film_locations` errors**
+DataSF was unreachable. This deliberately fails the build rather than shipping an
+empty database. Retry: `vercel --prod`.
 
-**`/api/health/` returns 503 with "Database is empty"**
-The sync has not run. See 2.5.
+**`/api/health/` returns 503, "Database is empty"**
+The build ran without the sync step. Check the build log for
+`--> Loading film locations from DataSF`, and confirm `vercel.json` is at the
+repository root.
 
-**`DisallowedHost` in the logs**
-```bash
-fly secrets set DJANGO_ALLOWED_HOSTS="sf-on-film-api.fly.dev"
-```
+**500 on every API route**
+Usually a missing `DJANGO_SECRET_KEY`. Check with `vercel env ls`, then redeploy.
 
-**Frontend builds but calls localhost**
-`VITE_API_BASE_URL` was missing at build time. Set it, then redeploy — an env
-change alone will not fix an already-built bundle.
+**"attempt to write a readonly database"**
+Something is writing at runtime. The API is read-only by design; check `vercel logs`
+for the failing view.
 
-**Vercel build fails, cannot find package.json**
-Root Directory is not set to `frontend`.
+**Frontend loads, API calls 404**
+`vercel.json` is not at the repository root, or the project's Root Directory was set
+to `frontend`. It must be `./`.
 
-**Data disappeared after a deploy**
-The volume is not mounted. `fly volumes list` should show `sf_film_data`, and
-`fly.toml` should point `[[mounts]] destination` at `/data` with
-`DATABASE_PATH=/data/db.sqlite3`.
+**Build succeeds but the map is empty**
+Open `/api/locations/` directly. If it returns `[]`, the sync ran against an empty
+response; if it 404s, the rewrite rules are not being applied.
 
 **Useful commands**
 ```bash
-fly logs            # live logs
-fly status          # machine health
-fly ssh console     # shell into the running container
+vercel logs           # runtime logs
+vercel inspect        # deployment details
+vercel env ls         # configured variables
 ```
 
 ---
 
 ## Costs
 
-Both free tiers cover this comfortably.
-
-| | |
-|---|---|
-| Fly.io | 1 shared-cpu-1x machine + 1 GB volume — inside the free allowance |
-| Vercel | Hobby covers static hosting and bandwidth for a demo |
-
-`auto_stop_machines = false` in `fly.toml` keeps the machine warm. That uses more
-of the allowance than scale-to-zero, and it is deliberate: a cold start is the
-first thing a reviewer would experience.
+Vercel's Hobby tier covers this: static hosting, serverless function invocations, and
+bandwidth for a demo. **No payment card required.**
 
 ---
 
-## Alternative: Railway
+## Alternative: Fly.io
 
-If Fly proves awkward, Railway deploys the same Dockerfile:
+The original two-platform setup still works and is kept in the repository
+(`backend/Dockerfile`, `backend/fly.toml`). Choose it if the API ever needs to write
+in production — a real volume, and data refreshable without a redeploy. It requires a
+card at signup. See [ADR-0005](decisions/0005-hosting.md) for the full reasoning.
 
 ```bash
-npm i -g @railway/cli
-railway login
-cd backend && railway init && railway up
-railway volume add --mount-path /data
-railway variables set DATABASE_PATH=/data/db.sqlite3 \
-  DJANGO_SECRET_KEY="$(python3 -c 'import secrets;print(secrets.token_urlsafe(50))')" \
-  DJANGO_ALLOWED_HOSTS="your-app.up.railway.app"
-railway run python manage.py sync_film_locations
+cd backend
+fly launch --no-deploy --copy-config --name sf-on-film-api --region sjc
+fly volumes create sf_film_data --region sjc --size 1
+fly secrets set DJANGO_SECRET_KEY="$(python3 -c 'import secrets;print(secrets.token_urlsafe(50))')" \
+                DJANGO_ALLOWED_HOSTS="sf-on-film-api.fly.dev" \
+                CORS_ALLOWED_ORIGINS="https://your-spa.vercel.app"
+fly deploy
+fly ssh console -C "python manage.py sync_film_locations"
 ```
 
-The tradeoff is that Railway's free credit is time-limited, so the demo link may
-stop working weeks later — see [ADR-0005](decisions/0005-hosting.md).
+**`zsh: command not found: fly` right after installing** — the installer adds the
+PATH entry to `~/.zshrc`, but the shell you are in started before that edit. Reload
+it (`source ~/.zshrc`) or open a new tab.

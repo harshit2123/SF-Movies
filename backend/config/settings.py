@@ -74,6 +74,15 @@ else:
 
 ALLOWED_HOSTS = _csv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 
+# Vercel assigns a generated hostname per deployment, and it changes on every
+# preview build. Trusting it here avoids having to update a secret each time.
+if vercel_host := os.getenv("VERCEL_URL"):
+    ALLOWED_HOSTS.append(vercel_host)
+if vercel_branch_host := os.getenv("VERCEL_BRANCH_URL"):
+    ALLOWED_HOSTS.append(vercel_branch_host)
+if project_host := os.getenv("VERCEL_PROJECT_PRODUCTION_URL"):
+    ALLOWED_HOSTS.append(project_host)
+
 # Fly.io terminates TLS at the edge and forwards this header.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
@@ -130,6 +139,22 @@ TEMPLATES = [
 # persistent volume, so the sync command's writes survive restarts (ADR-0005).
 DATABASE_PATH = os.getenv("DATABASE_PATH", "db.sqlite3")
 
+# True inside a Vercel serverless function, false during its build step and
+# everywhere else. Vercel sets VERCEL=1 for both, so the read-only filesystem is
+# detected via VERCEL_ENV, which is absent while building.
+IS_SERVERLESS = bool(os.getenv("VERCEL")) and not os.getenv("VERCEL_BUILD")
+
+_SQLITE_OPTIONS: dict[str, object] = {"transaction_mode": "IMMEDIATE"}
+
+# WAL lets the API serve reads while a sync writes, but it needs a writable
+# directory for its -wal and -shm sidecar files. On Vercel the runtime
+# filesystem is read-only and the database is baked in at build time
+# (ADR-0007), so enabling WAL there fails on the first query with
+# "attempt to write a readonly database". The default rollback journal is
+# correct for a database nothing writes to.
+if not IS_SERVERLESS:
+    _SQLITE_OPTIONS["init_command"] = "PRAGMA journal_mode=WAL;"
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -138,11 +163,7 @@ DATABASES = {
             if os.path.isabs(DATABASE_PATH)
             else BASE_DIR / DATABASE_PATH
         ),
-        "OPTIONS": {
-            # WAL lets the read-only API serve requests while a sync writes.
-            "init_command": "PRAGMA journal_mode=WAL;",
-            "transaction_mode": "IMMEDIATE",
-        },
+        "OPTIONS": _SQLITE_OPTIONS,
     }
 }
 

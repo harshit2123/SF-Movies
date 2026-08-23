@@ -108,7 +108,10 @@ class FilmViewSet(viewsets.ReadOnlyModelViewSet):
                 | Q(actors__icontains=person)
             )
 
-        return queryset
+        # An explicit total order: `.distinct()` above can drop Meta.ordering,
+        # and an unordered queryset lets the paginator repeat or skip rows
+        # between pages. `slug` breaks ties, since titles are not unique.
+        return queryset.order_by("title", "release_year", "slug")
 
     def get_serializer_class(self):
         if self.action == "retrieve":
