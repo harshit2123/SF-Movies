@@ -53,6 +53,120 @@
   stroke-opacity: 0.75;
 }
 
+/* --- Named pins ----------------------------------------------------------
+ * At street level a dot is not information — you would have to click every one
+ * to learn what it is. These replace the dots above LABEL_ZOOM and carry the
+ * film's name and year.
+ */
+
+.pin {
+  /* Let the label overflow the 10px icon box without being clipped. */
+  overflow: visible;
+}
+
+.pin__dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-meta);
+  border: 1.5px solid var(--color-base);
+  box-shadow: 0 0 0 1px rgba(107, 143, 113, 0.35);
+}
+
+.pin__label {
+  position: absolute;
+  left: 15px;
+  top: -3px;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 6px;
+  max-width: 190px;
+  background: rgba(14, 14, 16, 0.88);
+  border: 1px solid var(--color-border);
+  border-left: 2px solid var(--color-meta);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.pin__label em {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-style: normal;
+  color: var(--color-text-dim);
+}
+
+.pin:hover {
+  /* Lift the hovered label clear of its neighbours. */
+  z-index: 900 !important;
+}
+
+.pin:hover .pin__label {
+  background: var(--color-surface-raised);
+  border-color: var(--color-accent);
+  border-left-color: var(--color-accent);
+}
+
+/* --- Route frames --------------------------------------------------------
+ * The selected film's locations: numbered to match the filmstrip in the panel,
+ * and named so the sequence is readable on the map alone.
+ */
+
+.frame {
+  overflow: visible;
+}
+
+.frame__badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 2px solid var(--color-base);
+  color: var(--color-base);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  box-shadow: 0 0 0 1px var(--color-accent-glow);
+}
+
+.frame__label {
+  position: absolute;
+  left: 28px;
+  top: 2px;
+  max-width: 200px;
+  padding: 2px 6px;
+  background: rgba(14, 14, 16, 0.9);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.frame:hover {
+  z-index: 1000 !important;
+}
+
 /* --- Clusters ------------------------------------------------------------
  * Sized by density so the eye reads volume before reading numbers.
  */
@@ -60,14 +174,32 @@
 .cluster {
   display: grid;
   place-items: center;
+  align-content: center;
   border-radius: 50%;
   background: var(--color-surface-raised);
   border: 1px solid var(--color-border-strong);
   color: var(--color-text);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
+  line-height: 1;
   box-shadow: var(--shadow-raised);
   transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.cluster__count {
+  font-size: var(--text-xs);
+}
+
+/* The unit only fits on the larger badges; small ones stay just a number. */
+.cluster__unit {
+  font-size: 7px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+}
+
+.cluster--sm .cluster__unit {
+  display: none;
 }
 
 .cluster:hover {

@@ -7,10 +7,11 @@
  * everything else recedes.
  */
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CircleMarker,
   MapContainer,
+  Marker,
   Polyline,
   Popup,
   TileLayer,
@@ -78,9 +79,6 @@ function RouteFocus({ film }: { film: FilmDetail | null }) {
       .map((location) => [location.latitude!, location.longitude!] as [number, number]);
 
     if (points.length === 0) return;
-    // The detail panel overlays the map — on the right at desktop widths, as a
-    // bottom sheet below 900px. Pad on whichever edge it occupies so the route
-    // is never hidden underneath it.
     // The panel overlaps the map — on the right at desktop widths, as a bottom
     // sheet below 900px. Measure the actual overlap rather than assuming a fixed
     // inset, so the route lands in pixels the user can actually see.
@@ -133,6 +131,112 @@ function PointFocus({ point }: { point: { lat: number; lng: number } | null }) {
   return null;
 }
 
+/**
+ * Zoom at which markers stop being anonymous dots and start carrying film names.
+ * Below this the labels would collide into an unreadable mat; at or above it there
+ * is enough room between points for a name to be worth more than a dot.
+ */
+const LABEL_ZOOM = 16;
+
+/** Tracks zoom so the marker layer can switch between dots and named labels. */
+function useZoomLevel(): number {
+  const map = useMap();
+  const [zoom, setZoom] = useState(map.getZoom());
+
+  useEffect(() => {
+    const onZoom = () => setZoom(map.getZoom());
+    map.on("zoomend", onZoom);
+    return () => {
+      map.off("zoomend", onZoom);
+    };
+  }, [map]);
+
+  return zoom;
+}
+
+/**
+ * The backdrop layer.
+ *
+ * Below LABEL_ZOOM these are quiet dots — texture that shows where the city was
+ * filmed. At street level they become named labels, because a dot you have to
+ * click to identify is not telling you anything.
+ */
+function BackdropMarkers({
+  markers,
+  onSelectFilm,
+}: {
+  markers: MapMarker[];
+  onSelectFilm: (slug: string) => void;
+}) {
+  const zoom = useZoomLevel();
+  const labelled = zoom >= LABEL_ZOOM;
+
+  if (labelled) {
+    return (
+      <>
+        {markers.map((marker) => (
+          <Marker
+            key={marker.id}
+            position={[marker.latitude, marker.longitude]}
+            icon={L.divIcon({
+              className: "pin",
+              // The name is the point; the year disambiguates remakes and seasons.
+              html: `<span class="pin__dot"></span><span class="pin__label">${escapeHtml(
+                marker.film_title,
+              )}<em>${marker.release_year ?? ""}</em></span>`,
+              iconSize: [10, 10],
+              iconAnchor: [5, 5],
+            })}
+            eventHandlers={{ click: () => onSelectFilm(marker.film_slug) }}
+          >
+            <Popup>
+              <span className="popup__title">{marker.film_title}</span>
+              <span className="popup__year">{marker.release_year ?? "—"}</span>
+              <span className="popup__place">{marker.location_text}</span>
+            </Popup>
+          </Marker>
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {markers.map((marker) => (
+        <CircleMarker
+          key={marker.id}
+          center={[marker.latitude, marker.longitude]}
+          radius={5}
+          className="marker"
+          pathOptions={BACKDROP_STYLE}
+          eventHandlers={{ click: () => onSelectFilm(marker.film_slug) }}
+        >
+          <Popup>
+            <span className="popup__title">{marker.film_title}</span>
+            <span className="popup__year">{marker.release_year ?? "—"}</span>
+            <span className="popup__place">{marker.location_text}</span>
+          </Popup>
+        </CircleMarker>
+      ))}
+    </>
+  );
+}
+
+/** Film titles come from an external dataset and go into an HTML string. */
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (char) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[char]!,
+  );
+}
+
 export function MapView({
   markers,
   selectedFilm,
@@ -180,6 +284,10 @@ export function MapView({
           overlapping points that are unreadable and slow when drawn individually. */}
       <MarkerClusterGroup
         chunkedLoading
+        // Stop clustering at street level: a badge reading "2" tells the user
+        // nothing a pair of named pins would not tell them better.
+        disableClusteringAtZoom={LABEL_ZOOM}
+        spiderfyOnMaxZoom={false}
         maxClusterRadius={55}
         showCoverageOnHover={false}
         // react-leaflet-cluster ships no type for the cluster argument, and
@@ -188,28 +296,18 @@ export function MapView({
           const count = cluster.getChildCount();
           const size = count > 100 ? "lg" : count > 20 ? "md" : "sm";
           return L.divIcon({
-            html: `<span>${count}</span>`,
+            // "shoots" names the unit, so the badge reads as a quantity of
+            // something rather than an unexplained number.
+            html: `<span class="cluster__count">${count}</span><span class="cluster__unit">shoots</span>`,
             className: `cluster cluster--${size}`,
             iconSize: L.point(36, 36),
           });
         }}
       >
-        {backdropMarkers.map((marker) => (
-          <CircleMarker
-            key={marker.id}
-            center={[marker.latitude, marker.longitude]}
-            radius={5}
-            className="marker"
-            pathOptions={BACKDROP_STYLE}
-            eventHandlers={{ click: () => onSelectFilm(marker.film_slug) }}
-          >
-            <Popup>
-              <span className="popup__title">{marker.film_title}</span>
-              <span className="popup__year">{marker.release_year ?? "—"}</span>
-              <span className="popup__place">{marker.location_text}</span>
-            </Popup>
-          </CircleMarker>
-        ))}
+        <BackdropMarkers
+          markers={backdropMarkers}
+          onSelectFilm={onSelectFilm}
+        />
       </MarkerClusterGroup>
 
       {/* The signature: a film's locations as a connected, numbered route. */}
@@ -224,12 +322,21 @@ export function MapView({
       {selectedFilm?.locations
         .filter((location) => location.is_mappable)
         .map((location, index) => (
-          <CircleMarker
+          <Marker
             key={location.id}
-            center={[location.latitude!, location.longitude!]}
-            radius={11}
-            className="marker marker--route"
-            pathOptions={ROUTE_STYLE}
+            position={[location.latitude!, location.longitude!]}
+            icon={L.divIcon({
+              className: "frame",
+              // The frame number is the sequence; the place name identifies it
+              // without a click, matching the filmstrip in the panel.
+              html:
+                `<span class="frame__badge">${index + 1}</span>` +
+                `<span class="frame__label">${escapeHtml(
+                  location.location_text,
+                )}</span>`,
+              iconSize: [24, 24],
+              iconAnchor: [12, 12],
+            })}
           >
             <Popup>
               <span className="popup__index">Frame {index + 1}</span>
@@ -238,7 +345,7 @@ export function MapView({
                 <span className="popup__meta">{location.neighborhood}</span>
               )}
             </Popup>
-          </CircleMarker>
+          </Marker>
         ))}
 
       {userPosition && (
