@@ -68,7 +68,7 @@ npm run dev                                # http://localhost:5173
 **Tests:**
 
 ```bash
-cd backend && pytest                        # 98 tests, 98% coverage, no network
+cd backend && pytest                        # 114 tests, 98% coverage, no network
 cd frontend && npx tsc --noEmit             # type check
 ```
 
@@ -179,7 +179,7 @@ seen; they are counted and reported rather than silently dropped.
 
 ## Testing
 
-98 tests, 98% coverage on the `films` package. **No test touches the network** —
+114 tests, 98% coverage. **No test touches the network** —
 the Socrata fixture is trimmed from a real response and includes rows with and
 without coordinates, a multi-location film, and rows carrying `fun_facts`.
 
@@ -189,9 +189,11 @@ Coverage worth noting:
   `Retry-After` honored and capped, pagination offsets, malformed JSON
 - **Idempotency** — re-runs create and update nothing; the contradiction case is a
   named regression test
-- **Two bugs found by tests**, both with regression coverage: naive-vs-aware
-  timestamps silently breaking idempotency, and a default `Meta.ordering` defeating
-  `DISTINCT` on the neighborhoods facet (2,063 entries instead of 40)
+- **Three bugs found by tests**, each with regression coverage: naive-vs-aware
+  timestamps silently breaking idempotency, a default `Meta.ordering` defeating
+  `DISTINCT` on the neighborhoods facet (2,063 entries instead of 40), and
+  `load_dotenv` overriding platform-injected secrets, which also made the
+  missing-secret guard unreachable
 
 The frontend was verified with Playwright at 390/768/1440px — no horizontal
 overflow, no console errors, deep links restoring state, keyboard selection working.
