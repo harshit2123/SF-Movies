@@ -28,12 +28,20 @@ npm i -g vercel
 vercel login
 ```
 
-If `fly` is not found afterwards, add it to your shell:
+**`zsh: command not found: fly` right after installing** — the installer adds the
+PATH entry to `~/.zshrc`, but the shell you are sitting in started before that
+edit and has not re-read the file. Reload it, or open a new terminal tab:
 
 ```bash
-echo 'export FLYCTL_INSTALL="$HOME/.fly"' >> ~/.zshrc
-echo 'export PATH="$FLYCTL_INSTALL/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
+fly version
+```
+
+Only if that still fails is the PATH entry genuinely missing:
+
+```bash
+grep -n FLYCTL ~/.zshrc                     # check before adding a duplicate
+export PATH="$HOME/.fly/bin:$PATH"          # this session
 ```
 
 ---
