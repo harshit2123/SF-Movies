@@ -32,3 +32,9 @@ dist/
 
 # Frontend build output
 frontend/dist/
+# Vercel CLI local state
+.vercel
+
+# Vercel writes .env.local when linking. The broader `.env` patterns are already
+# covered above; .env.example must stay committed.
+.env.local
