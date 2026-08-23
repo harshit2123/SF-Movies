@@ -7,6 +7,7 @@ sync command populates (ADR-0003).
 """
 
 import logging
+import os
 
 from django.db.models import Count, Q, QuerySet
 from rest_framework import status, viewsets
@@ -306,8 +307,20 @@ def health(request):
         )
     except Exception as exc:
         logger.exception("health check failed")
+        from django.conf import settings as django_settings
+
+        db_path = django_settings.DATABASES["default"]["NAME"]
         return Response(
-            {"status": "degraded", "database": "error", "detail": str(exc)},
+            {
+                "status": "degraded",
+                "database": "error",
+                "detail": str(exc),
+                # The path and whether it exists, because "unable to open
+                # database file" alone cannot distinguish a missing file from
+                # a permissions problem or a wrong working directory.
+                "database_path": str(db_path),
+                "database_exists": os.path.exists(db_path),
+            },
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 

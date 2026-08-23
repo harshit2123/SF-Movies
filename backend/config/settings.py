@@ -144,25 +144,34 @@ DATABASE_PATH = os.getenv("DATABASE_PATH", "db.sqlite3")
 # detected via VERCEL_ENV, which is absent while building.
 IS_SERVERLESS = bool(os.getenv("VERCEL")) and not os.getenv("VERCEL_BUILD")
 
-_SQLITE_OPTIONS: dict[str, object] = {"transaction_mode": "IMMEDIATE"}
+_DB_FILE = (
+    Path(DATABASE_PATH) if os.path.isabs(DATABASE_PATH) else BASE_DIR / DATABASE_PATH
+)
 
-# WAL lets the API serve reads while a sync writes, but it needs a writable
-# directory for its -wal and -shm sidecar files. On Vercel the runtime
-# filesystem is read-only and the database is baked in at build time
-# (ADR-0007), so enabling WAL there fails on the first query with
-# "attempt to write a readonly database". The default rollback journal is
-# correct for a database nothing writes to.
-if not IS_SERVERLESS:
-    _SQLITE_OPTIONS["init_command"] = "PRAGMA journal_mode=WAL;"
+if IS_SERVERLESS:
+    # Vercel's runtime filesystem is read-only, and the database is baked in at
+    # build time (ADR-0007). Opening it normally still fails — SQLite wants to
+    # create a journal beside the file even to read, which raises "unable to
+    # open database file" despite the file being present.
+    #
+    # `file:...?mode=ro` opens it genuinely read-only, and `immutable=1` tells
+    # SQLite the file cannot change underneath it, so it skips locking and
+    # journalling entirely. Both are safe here precisely because nothing writes.
+    _SQLITE_NAME: object = f"file:{_DB_FILE}?mode=ro&immutable=1"
+    _SQLITE_OPTIONS: dict[str, object] = {"uri": True}
+else:
+    _SQLITE_NAME = _DB_FILE
+    # WAL lets the API serve reads while a sync writes. It needs a writable
+    # directory for its -wal and -shm sidecar files, so it is local-only.
+    _SQLITE_OPTIONS = {
+        "init_command": "PRAGMA journal_mode=WAL;",
+        "transaction_mode": "IMMEDIATE",
+    }
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": (
-            DATABASE_PATH
-            if os.path.isabs(DATABASE_PATH)
-            else BASE_DIR / DATABASE_PATH
-        ),
+        "NAME": _SQLITE_NAME,
         "OPTIONS": _SQLITE_OPTIONS,
     }
 }

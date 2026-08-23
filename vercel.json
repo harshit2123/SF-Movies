@@ -14,10 +14,6 @@
       "destination": "/api/index.py"
     },
     {
-      "source": "/admin/(.*)",
-      "destination": "/api/index.py"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
